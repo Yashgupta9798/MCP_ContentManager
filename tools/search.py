@@ -27,6 +27,8 @@ def search_records(
     query_parts = []
 
     if type:
+
+        
         query_parts.append(f"type:{type}")
 
     if title:
