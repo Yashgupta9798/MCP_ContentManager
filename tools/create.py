@@ -1,6 +1,5 @@
 import requests
 
-
 class CreateTool:
 
     BASE_URL = "http://localhost/CMServiceAPI"
