@@ -11,7 +11,7 @@
     "attachments": [
       {
         "name": "leave_policy.txt",
-        "path": "backend/document_store/REC-001/leave_policy.txt",
+        "path": "data/document_store/REC-001/leave_policy.txt",
         "mime_type": "text/plain"
       }
     ]
@@ -28,7 +28,7 @@
     "attachments": [
       {
         "name": "invoice_workflow.txt",
-        "path": "backend/document_store/REC-002/invoice_workflow.txt",
+        "path": "data/document_store/REC-002/invoice_workflow.txt",
         "mime_type": "text/plain"
       }
     ]
@@ -45,7 +45,7 @@
     "attachments": [
       {
         "name": "vendor_contract.txt",
-        "path": "backend/document_store/REC-003/vendor_contract.txt",
+        "path": "data/document_store/REC-003/vendor_contract.txt",
         "mime_type": "text/plain"
       }
     ]
@@ -62,7 +62,7 @@
     "attachments": [
       {
         "name": "q4_report.pdf",
-        "path": "backend/document_store/REC-004/q4_report.pdf",
+        "path": "data/document_store/REC-004/q4_report.pdf",
         "mime_type": "application/pdf"
       }
     ]
