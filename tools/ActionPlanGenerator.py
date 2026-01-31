@@ -3,6 +3,7 @@ import json
 import re
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+from rag.retriever import ToolRetriever
 
 load_dotenv()
 
@@ -36,9 +37,10 @@ class ActionPlanGeneratorWrite:
         """
         
         # retrieved_docs = rag(user_query)
-        retrieved_docs = "Sample retrieved documents relevant to the user query."
-        prompt = open(f"prompts/{intent.lower()}_prompt.md").read()
-        prompt = prompt + f"\n\nUser query:\n{user_query}\n\nRetrieved documents:\n{retrieved_docs}"
+        retrieved_docs = ToolRetriever().match(user_query)
+        print(retrieved_docs)
+        prompt = open(f"prompts/tool_selection_prompt.md").read()
+        prompt = prompt + f"\n\nUser query:\n{user_query}\n\nUser intent:\n{intent}\n\nRetrieved documents:\n{retrieved_docs}"
 
         response = self.llm.invoke(prompt)
         text = response.content.strip()
