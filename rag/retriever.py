@@ -1,7 +1,7 @@
 from pathlib import Path
 from langchain_huggingface import HuggingFaceEmbeddings
 
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 VECTORSTORE_DIR = BASE_DIR / "rag" / "vectorstore"
