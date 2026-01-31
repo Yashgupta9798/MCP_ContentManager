@@ -7,3 +7,8 @@ sentence-transformers
 
 # Utilities (safe + commonly required)
 numpy
+langchain
+langchain-community
+langchain-huggingface
+faiss-cpu
+sentence-transformers
