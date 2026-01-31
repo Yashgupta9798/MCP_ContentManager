@@ -1,4 +1,2 @@
-<<<<<<< Updated upstream
 mcp
-=======
->>>>>>> Stashed changes
+langchain_huggingface
