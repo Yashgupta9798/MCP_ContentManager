@@ -1,54 +1,42 @@
 import requests
-from typing import Optional, Dict, Any
+from urllib.parse import urlencode
 
 
-BASE_URL = "http://localhost/CMServiceAPI/Record"
+class SearchTool:
 
+    BASE_URL = "http://localhost/CMServiceAPI"
 
-def search_records(
-    *,
-    type: Optional[str] = None,
-    title: Optional[str] = None,
-    number: Optional[str] = None,
-    created: Optional[str] = None,
-    status: Optional[str] = None,
-    properties: str = "NameString",
-    response_format: str = "json",
-) -> Dict[str, Any]:
-    """
-    Call CMServiceAPI Record search using native query fields.
-    """
+    def execute(self, action_plan: dict):
 
-    params = {
-        "format": response_format,
-        "Properties": properties,
-    }
+        path = action_plan.get("path")
+        parameters = action_plan.get("parameters", {})
 
-    query_parts = []
+        # ----------------------------
+        # DEFAULT PARAMETERS
+        # ----------------------------
+        if not parameters:
+            parameters = {"q": "all"}
 
-    if type:
-        query_parts.append(f"type:{type}")
+        # ----------------------------
+        # BUILD QUERY STRING
+        # ----------------------------
 
-    if title:
-        query_parts.append(f"title:{title}")
+        # Convert parameters dict to query string
+        # Example:
+        # RecordNumber=26/1&format=json&properties=NameString
 
-    if number:
-        query_parts.append(f"number:{number}")
+        query_string = urlencode(parameters)
 
-    if created:
-        query_parts.append(f"created:{created}")
+        # ----------------------------
+        # FINAL URL
+        # ----------------------------
+        url = f"{self.BASE_URL}/{path}?{query_string}"
 
-    if status:
-        query_parts.append(f"status:{status}")
+        print("\nExecuting GET request:")
+        print(url)
 
-    if query_parts:
-        params["q"] = "/".join(query_parts)
-
-    response = requests.get(
-        BASE_URL,
-        params=params,
-        timeout=10,
-    )
+        try:
+            response = requests.get(url)
 
             response.raise_for_status()
 
