@@ -17,26 +17,12 @@ class Agent:
         intent = self.intent_router.detect_intent(user_query)
         print("Detected intent:", intent)
 
-        print("Detected intent:", intent)
-
         # -----------------------
         # ACTION PLAN GENERATION
         # -----------------------
-
-        if intent == "CREATE":
-            action_plan = ActionPlanGeneratorWrite().run(user_query, intent)
-
-        elif intent == "UPDATE":
-            action_plan = ActionPlanGeneratorWrite().run(user_query, intent)
-
-        elif intent == "SEARCH":
+        try:
             action_plan = ActionPlanGenerator().run(user_query, intent)
-
-        elif intent == "HELP":
-            print("Help RAG flow will be executed")
-            return
-
-        else:
+        except Exception as e:
             print("Unable to understand the request.")
             return
 
