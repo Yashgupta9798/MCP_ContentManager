@@ -4,34 +4,27 @@ from urllib.parse import urlencode
 
 class SearchTool:
 
-    BASE_URL = "http://localhost/CMServiceAPI"
+    BASE_URL = "http://localhost/CMServiceAPI/Record?q="
 
     def execute(self, action_plan: dict):
 
         path = action_plan.get("path")
         parameters = action_plan.get("parameters", {})
-
+        
+        to_append = ""
         # ----------------------------
-        # DEFAULT PARAMETERS
+        # IF NO PARAMETERS, FETCH ALL
         # ----------------------------
         if not parameters:
-            parameters = {"q": "all"}
-
-        # ----------------------------
-        # BUILD QUERY STRING
-        # ----------------------------
-
-        # Convert parameters dict to query string
-        # Example:
-        # RecordNumber=26/1&format=json&properties=NameString
-
-        query_string = urlencode(parameters)
+            to_append += "all"
+        else:
+            to_append = urlencode(parameters)
 
         # ----------------------------
         # FINAL URL
         # ----------------------------
-        url = f"{self.BASE_URL}/{path}?{query_string}"
-
+        url = f"{self.BASE_URL}{to_append}"
+        
         print("\nExecuting GET request:")
         print(url)
 
