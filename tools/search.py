@@ -6,14 +6,17 @@ BASE_URL = "http://localhost/CMServiceAPI/Record"
 
 
 def search_records(
-    record_number: Optional[str] = None,
+    *,
+    type: Optional[str] = None,
+    title: Optional[str] = None,
+    number: Optional[str] = None,
+    created: Optional[str] = None,
     status: Optional[str] = None,
-    created_date: Optional[str] = None,
     properties: str = "NameString",
     response_format: str = "json",
 ) -> Dict[str, Any]:
     """
-    Call CMServiceAPI Record search with structured parameters.
+    Call CMServiceAPI Record search using native query fields.
     """
 
     params = {
@@ -23,14 +26,20 @@ def search_records(
 
     query_parts = []
 
-    if record_number:
-        query_parts.append(f"number:{record_number}")
+    if type:
+        query_parts.append(f"type:{type}")
+
+    if title:
+        query_parts.append(f"title:{title}")
+
+    if number:
+        query_parts.append(f"number:{number}")
+
+    if created:
+        query_parts.append(f"created:{created}")
 
     if status:
         query_parts.append(f"status:{status}")
-
-    if created_date:
-        query_parts.append(f"created:{created_date}")
 
     if query_parts:
         params["q"] = "/".join(query_parts)
