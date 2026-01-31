@@ -1,0 +1,8 @@
+What is a record?
+A record is a structured piece of stored information such as a policy,
+invoice, or report. Each record has metadata like record_id, status,
+and creation date.
+
+How does record search work?
+The system can search records using filters (status, date) or
+semantic search using meaning-based queries.

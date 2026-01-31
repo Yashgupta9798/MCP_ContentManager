@@ -1,0 +1,231 @@
+{
+  "Results": [
+    {
+      "TrimType": "Record",
+      "Uri": 1,
+      "RecordNumber": "D26/1",
+      "RecordType": "Document",
+      "Title": "General Rec",
+      "DateCreated": "2026-01-18T23:55:37",
+      "SourceType": "Windows File System: Main Document Store",
+      "HasDocument": true,
+      "Metadata": {
+        "Author": "System",
+        "Owner": "Administrator",
+        "Department": "General",
+        "SecurityLevel": "Internal",
+        "Status": "Active",
+        "Version": "1.0"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 2,
+      "RecordNumber": "26/1",
+      "RecordType": "Folder",
+      "Title": "marksheet",
+      "DateCreated": "2026-01-19T00:00:50",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "Reception",
+        "Owner": "Clerk",
+        "Department": "Education",
+        "SecurityLevel": "Public",
+        "Status": "Open",
+        "Version": "1.0"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 3,
+      "RecordNumber": "D26/2",
+      "RecordType": "Document",
+      "Title": "marksheet july dec 2026",
+      "DateCreated": "2026-01-19T00:01:14",
+      "SourceType": "Windows File System: Main Document Store",
+      "HasDocument": true,
+      "Metadata": {
+        "Author": "Admin",
+        "Owner": "EducationDept",
+        "Department": "Education",
+        "SecurityLevel": "Confidential",
+        "Status": "Approved",
+        "Version": "1.1"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 4,
+      "RecordNumber": "D26/3",
+      "RecordType": "Document",
+      "Title": "datesheet",
+      "DateCreated": "2024-09-30T13:35:00",
+      "SourceType": "Windows File System: Main Document Store",
+      "HasDocument": true,
+      "Metadata": {
+        "Author": "ExamCell",
+        "Owner": "University",
+        "Department": "Examination",
+        "SecurityLevel": "Public",
+        "Status": "Archived",
+        "Version": "1.0"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 5,
+      "RecordNumber": "D26/4",
+      "RecordType": "Document",
+      "Title": "Test Workflow Record",
+      "DateCreated": "2026-01-20T12:50:53",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "WorkflowEngine",
+        "Owner": "System",
+        "Department": "Automation",
+        "SecurityLevel": "Internal",
+        "Status": "In Workflow",
+        "Version": "1.0"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 6,
+      "RecordNumber": "D26/5",
+      "RecordType": "Document",
+      "Title": "For checking",
+      "DateCreated": "2026-01-30T19:31:37",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "Tester",
+        "Owner": "QA Team",
+        "Department": "Quality",
+        "SecurityLevel": "Internal",
+        "Status": "Under Review",
+        "Version": "0.9"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 7,
+      "RecordNumber": "D26/6",
+      "RecordType": "Document",
+      "Title": "Test Title",
+      "DateCreated": "2026-01-30T20:25:46",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "Tester",
+        "Owner": "QA Team",
+        "Department": "Quality",
+        "SecurityLevel": "Internal",
+        "Status": "Draft",
+        "Version": "0.1"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 8,
+      "RecordNumber": "D26/7",
+      "RecordType": "Document",
+      "Title": "datesheet6",
+      "DateCreated": "2026-01-30T20:31:04",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "ExamCell",
+        "Owner": "University",
+        "Department": "Examination",
+        "SecurityLevel": "Public",
+        "Status": "Draft",
+        "Version": "1.0"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 9,
+      "RecordNumber": "D26/8",
+      "RecordType": "Document",
+      "Title": "datesheet6",
+      "DateCreated": "2026-01-31T01:22:34",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "ExamCell",
+        "Owner": "University",
+        "Department": "Examination",
+        "SecurityLevel": "Public",
+        "Status": "Active",
+        "Version": "1.1"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 10,
+      "RecordNumber": "D26/9",
+      "RecordType": "Document",
+      "Title": "salesforce policy",
+      "DateCreated": "2026-01-31T16:13:44",
+      "SourceType": "Windows File System: Main Document Store",
+      "HasDocument": true,
+      "Metadata": {
+        "Author": "IT Admin",
+        "Owner": "IT Department",
+        "Department": "IT",
+        "SecurityLevel": "Confidential",
+        "Status": "Approved",
+        "Version": "2.0"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 11,
+      "RecordNumber": "D26/10",
+      "RecordType": "Document",
+      "Title": "government agreement",
+      "DateCreated": "2026-01-31T16:15:30",
+      "SourceType": "Windows File System: Main Document Store",
+      "HasDocument": true,
+      "Metadata": {
+        "Author": "Legal Team",
+        "Owner": "Government Affairs",
+        "Department": "Legal",
+        "SecurityLevel": "Restricted",
+        "Status": "Approved",
+        "Version": "3.2"
+      }
+    },
+    {
+      "TrimType": "Record",
+      "Uri": 12,
+      "RecordNumber": "D26/11",
+      "RecordType": "Document",
+      "Title": "Government-access_id",
+      "DateCreated": "2026-01-31T16:16:20",
+      "SourceType": "Record has no document attached",
+      "HasDocument": false,
+      "Metadata": {
+        "Author": "Security Admin",
+        "Owner": "Access Control",
+        "Department": "Security",
+        "SecurityLevel": "Restricted",
+        "Status": "Active",
+        "Version": "1.0"
+      }
+    }
+  ],
+  "Paging": {
+    "TotalResults": 12,
+    "ReturnedResults": 12,
+    "HasMoreItems": false,
+    "PageNumber": 1,
+    "PageSize": 50
+  },
+  "ResponseStatus": {
+    "Status": "Success",
+    "Message": "All 12 records with metadata retrieved successfully"
+  }
+}

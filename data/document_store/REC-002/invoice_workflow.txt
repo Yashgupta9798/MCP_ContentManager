@@ -1,0 +1,1 @@
+"Leave policy requires approval", "Invoices must be paid within 5 days"
