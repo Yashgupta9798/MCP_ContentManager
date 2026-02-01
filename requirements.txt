@@ -14,3 +14,6 @@ faiss-cpu
 sentence-transformers
 dotenv
 requests
+mcp-server
+fastapi
+uvicorn
