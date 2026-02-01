@@ -43,21 +43,25 @@ class ActionPlanGenerator:
         prompt = prompt + f"\n\nUser query:\n{user_query}\n\nUser intent:\n{intent}\n\nRetrieved documents:\n{retrieved_docs}"
 
         response = self.llm.invoke(prompt)
+        print(response.content)
         text = response.content.strip()
 
-        json_text = self._extract_json(text)
+        # json_text = self._extract_json(text)
+        # print(json_text)
 
-        if not json_text:
-            return {
-                "error": "Failed to generate action plan",
-                "operation": intent
-            }
+        # if not json_text:
+        #     return {
+        #         "error": "Failed to generate action plan",
+        #         "operation": intent
+        #     }
+        action_plan = text
+        return json.loads(action_plan)
 
-        try:
-            action_plan = json.loads(json_text)
-            return action_plan
-        except json.JSONDecodeError:
-            return {
-                "error": "Invalid JSON in action plan",
-                "operation": intent
-            }
+        # try:
+        #     action_plan = json.loads(json_text)
+        #     return action_plan
+        # except json.JSONDecodeError:
+        #     return {
+        #         "error": "Invalid JSON in action plan",
+        #         "operation": intent
+        #     }
