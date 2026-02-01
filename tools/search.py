@@ -1,8 +1,8 @@
-from mcp.server.fastapi import MCPServer
+from mcp.server.fastmcp import FastMCP
 import requests
 from urllib.parse import urlencode
 
-mcp = MCPServer()
+mcp = FastMCP()
 
 BASE_URL = "http://localhost/CMServiceAPI/Record?q="
 

@@ -8,7 +8,7 @@ from rag.retriever import ToolRetriever
 load_dotenv()
 
 
-class ActionPlanGeneratorWrite:
+class ActionPlanGenerator:
 
     def __init__(self):
         endpoint = HuggingFaceEndpoint(

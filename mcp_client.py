@@ -1,4 +1,6 @@
 from agent.agent import Agent
+from tools.search import search_records
+import asyncio
 
 
 def main():
@@ -15,7 +17,8 @@ def main():
 
         print("\n--- Sending query to Agent ---")
 
-        response = agent.handle_query(user_query)
+        # Run the asynchronous handle_query method
+        response = asyncio.run(agent.handle_query(user_query))
 
         print("\n--- Final Response Stored in Variable 'response' ---")
         print(response)
