@@ -1,0 +1,142 @@
+{
+  "journey_id": "JOURNEY_20260201_123432_8994",
+  "timestamp": "2026-02-01T12:34:32.510216",
+  "user_query": "Show me all active leave policies for Q1 2026",
+  "status": "started",
+  "stages": {
+    "intent_detection": [
+      {
+        "stage": "intent_detection",
+        "timestamp": "2026-02-01T12:34:34.013796",
+        "intent": "SEARCH",
+        "confidence": 0.95
+      }
+    ],
+    "rag_retrieval": [
+      {
+        "stage": "rag_retrieval",
+        "timestamp": "2026-02-01T12:34:34.540589",
+        "query": "Show me all active leave policies for Q1 2026",
+        "retrieved_docs_count": 3,
+        "retrieval_time_seconds": 0.834,
+        "documents": [
+          "Leave_Policy_Q1_2026.pdf",
+          "HR_Guidelines_Active.md",
+          "Employee_Benefits.txt"
+        ]
+      }
+    ],
+    "action_plan": [
+      {
+        "stage": "action_plan_generation",
+        "timestamp": "2026-02-01T12:34:35.065807",
+        "action_plan": {
+          "tool": "search",
+          "method": "GET",
+          "operation": "search_records",
+          "filters": {
+            "type": "leave_policy",
+            "status": "active",
+            "quarter": "Q1",
+            "year": 2026
+          },
+          "sort": "modified_date",
+          "order": "desc"
+        },
+        "generation_time_seconds": 1.234
+      }
+    ],
+    "tool_execution": [
+      {
+        "stage": "tool_execution_start",
+        "timestamp": "2026-02-01T12:34:35.587141",
+        "tool_name": "search_records",
+        "arguments": {
+          "action_plan": {
+            "tool": "search",
+            "method": "GET",
+            "operation": "search_records",
+            "filters": {
+              "type": "leave_policy",
+              "status": "active",
+              "quarter": "Q1",
+              "year": 2026
+            },
+            "sort": "modified_date",
+            "order": "desc"
+          }
+        },
+        "status": "in_progress"
+      },
+      {
+        "stage": "tool_execution_result",
+        "timestamp": "2026-02-01T12:34:37.107299",
+        "tool_name": "search_records",
+        "success": true,
+        "execution_time_seconds": 1.523,
+        "result": {
+          "status": "success",
+          "records_found": 3,
+          "records": [
+            {
+              "id": "REC-001",
+              "title": "Q1 Leave Policy 2026",
+              "type": "leave_policy",
+              "last_modified": "2026-01-15"
+            },
+            {
+              "id": "REC-002",
+              "title": "Q1 Updated Guidelines",
+              "type": "leave_policy",
+              "last_modified": "2026-01-10"
+            },
+            {
+              "id": "REC-003",
+              "title": "Q1 Holiday Calendar",
+              "type": "reference",
+              "last_modified": "2026-01-05"
+            }
+          ]
+        },
+        "error": null
+      }
+    ],
+    "completion": [
+      {
+        "stage": "journey_completion",
+        "timestamp": "2026-02-01T12:34:37.632710",
+        "status": "completed",
+        "final_response": {
+          "status": "success",
+          "message": "Found 3 active leave policies for Q1 2026",
+          "data": {
+            "status": "success",
+            "records_found": 3,
+            "records": [
+              {
+                "id": "REC-001",
+                "title": "Q1 Leave Policy 2026",
+                "type": "leave_policy",
+                "last_modified": "2026-01-15"
+              },
+              {
+                "id": "REC-002",
+                "title": "Q1 Updated Guidelines",
+                "type": "leave_policy",
+                "last_modified": "2026-01-10"
+              },
+              {
+                "id": "REC-003",
+                "title": "Q1 Holiday Calendar",
+                "type": "reference",
+                "last_modified": "2026-01-05"
+              }
+            ]
+          }
+        },
+        "total_time_seconds": 5.0
+      }
+    ]
+  },
+  "updated_at": "2026-02-01T12:34:37.659886"
+}

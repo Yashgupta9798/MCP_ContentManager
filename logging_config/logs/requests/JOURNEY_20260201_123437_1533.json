@@ -1,0 +1,30 @@
+{
+  "journey_id": "JOURNEY_20260201_123437_1533",
+  "timestamp": "2026-02-01T12:34:37.662885",
+  "user_query": "Invalid operation that will fail",
+  "status": "started",
+  "stages": {
+    "error": [
+      {
+        "journey_id": "JOURNEY_20260201_123437_1533",
+        "timestamp": "2026-02-01T12:34:38.668353",
+        "error_type": "ValidationError",
+        "error_message": "Query contains invalid syntax",
+        "stage": "intent_detection",
+        "stack_trace": "Traceback (most recent call last):\n  File \"llm/intent_router.py\", line 25, in detect_intent\n    data = json.loads(json_text)\njson.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+      }
+    ],
+    "completion": [
+      {
+        "stage": "journey_completion",
+        "timestamp": "2026-02-01T12:34:39.191729",
+        "status": "failed",
+        "final_response": {
+          "error": "Failed to process query"
+        },
+        "total_time_seconds": 1.234
+      }
+    ]
+  },
+  "updated_at": "2026-02-01T12:34:39.212888"
+}

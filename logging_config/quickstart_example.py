@@ -9,8 +9,8 @@ RUN THIS EXAMPLE:
 
 import json
 import time
-from logging_config.journey_logger import get_journey_logger
-from logging_config.logger_utils import LogAnalyzer
+from journey_logger import get_journey_logger
+from logger_utils import LogAnalyzer
 
 
 def example_journey_simulation():

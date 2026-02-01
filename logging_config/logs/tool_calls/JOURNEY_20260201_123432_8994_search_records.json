@@ -1,0 +1,31 @@
+{
+  "tool_name": "search_records",
+  "success": true,
+  "execution_time": 1.523,
+  "result": {
+    "status": "success",
+    "records_found": 3,
+    "records": [
+      {
+        "id": "REC-001",
+        "title": "Q1 Leave Policy 2026",
+        "type": "leave_policy",
+        "last_modified": "2026-01-15"
+      },
+      {
+        "id": "REC-002",
+        "title": "Q1 Updated Guidelines",
+        "type": "leave_policy",
+        "last_modified": "2026-01-10"
+      },
+      {
+        "id": "REC-003",
+        "title": "Q1 Holiday Calendar",
+        "type": "reference",
+        "last_modified": "2026-01-05"
+      }
+    ]
+  },
+  "error": null,
+  "timestamp": "2026-02-01T12:34:37.129887"
+}
