@@ -1,0 +1,121 @@
+{
+  "journey_id": "JOURNEY_20260201_131109_941598",
+  "timestamp": "2026-02-01T13:11:09.941598",
+  "user_query": "Show me all active leave policies for Q1 2026",
+  "stages": {
+    "intent_detection": [
+      {
+        "timestamp": "2026-02-01T13:11:11.445232",
+        "intent": "SEARCH",
+        "confidence": 0.95
+      }
+    ],
+    "rag_retrieval": [
+      {
+        "timestamp": "2026-02-01T13:11:11.978881",
+        "query": "Show me all active leave policies for Q1 2026",
+        "retrieved_docs": [
+          "Leave_Policy_Q1_2026.pdf",
+          "HR_Guidelines_Active.md",
+          "Employee_Benefits.txt"
+        ],
+        "retrieval_time": 0.834
+      }
+    ],
+    "action_plan": [
+      {
+        "timestamp": "2026-02-01T13:11:12.500820",
+        "action_plan": {
+          "path": "Record/",
+          "method": "GET",
+          "parameters": {
+            "q": "active leave policies Q1 2026",
+            "format": "json",
+            "properties": "NameString"
+          },
+          "operation": "SEARCH"
+        },
+        "generation_time": 1.234
+      }
+    ],
+    "tool_execution": [
+      {
+        "timestamp": "2026-02-01T13:11:13.020915",
+        "tool": "search_records",
+        "arguments": {
+          "action_plan": {
+            "path": "Record/",
+            "method": "GET",
+            "parameters": {
+              "q": "active leave policies Q1 2026",
+              "format": "json",
+              "properties": "NameString"
+            },
+            "operation": "SEARCH"
+          }
+        },
+        "status": "started"
+      },
+      {
+        "timestamp": "2026-02-01T13:11:14.549200",
+        "tool": "search_records",
+        "success": true,
+        "execution_time": 1.523,
+        "result": {
+          "status": "success",
+          "records_found": 3,
+          "records": [
+            {
+              "id": "REC-001",
+              "title": "Q1 Leave Policy 2026",
+              "last_modified": "2026-01-15"
+            },
+            {
+              "id": "REC-002",
+              "title": "Q1 Updated Guidelines",
+              "last_modified": "2026-01-10"
+            },
+            {
+              "id": "REC-003",
+              "title": "Q1 Holiday Calendar",
+              "last_modified": "2026-01-05"
+            }
+          ]
+        },
+        "error": null
+      }
+    ],
+    "completion": [
+      {
+        "timestamp": "2026-02-01T13:11:15.075763",
+        "success": true,
+        "total_time": 5.0,
+        "final_response": {
+          "message": "Found 3 active leave policies for Q1 2026",
+          "data": {
+            "status": "success",
+            "records_found": 3,
+            "records": [
+              {
+                "id": "REC-001",
+                "title": "Q1 Leave Policy 2026",
+                "last_modified": "2026-01-15"
+              },
+              {
+                "id": "REC-002",
+                "title": "Q1 Updated Guidelines",
+                "last_modified": "2026-01-10"
+              },
+              {
+                "id": "REC-003",
+                "title": "Q1 Holiday Calendar",
+                "last_modified": "2026-01-05"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "updated_at": "2026-02-01T13:11:15.096424"
+}

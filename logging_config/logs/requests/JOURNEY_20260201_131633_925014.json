@@ -1,0 +1,27 @@
+{
+  "journey_id": "JOURNEY_20260201_131633_925014",
+  "timestamp": "2026-02-01T13:16:33.925014",
+  "user_query": "Invalid operation that will fail",
+  "stages": {
+    "error": [
+      {
+        "timestamp": "2026-02-01T13:16:34.928586",
+        "error_type": "ValidationError",
+        "error_message": "Invalid action plan structure",
+        "stage": "action_plan_generation",
+        "stack_trace": null
+      }
+    ],
+    "completion": [
+      {
+        "timestamp": "2026-02-01T13:16:34.950760",
+        "success": false,
+        "total_time": 1.234,
+        "final_response": {
+          "error": "Failed to process query"
+        }
+      }
+    ]
+  },
+  "updated_at": "2026-02-01T13:16:34.969184"
+}

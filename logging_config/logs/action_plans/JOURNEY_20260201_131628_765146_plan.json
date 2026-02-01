@@ -1,0 +1,10 @@
+{
+  "path": "Record/",
+  "method": "GET",
+  "parameters": {
+    "q": "active leave policies Q1 2026",
+    "format": "json",
+    "properties": "NameString"
+  },
+  "operation": "SEARCH"
+}
