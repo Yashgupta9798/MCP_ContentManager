@@ -1,69 +1,31 @@
-from mcp.server.fastmcp import FastMCP
 import requests
 
-mcp =  FastMCP()
-
-BASE_URL = "http://localhost/CMServiceAPI"
+BASE_URL = "http://localhost/CMServiceAPI/Record/"
 
 
-@mcp.tool()
-async def create_record(action_plan: dict) -> dict:
+async def create_record_impl(action_plan: dict) -> dict:
     """
     Create a record in Content Manager.
-
-    Args:
-        action_plan: Action plan with API path and parameters.
+    MCP-style implementation: accepts action_plan dict with method POST and parameters.
     """
-
-    path = action_plan.get("path")
     parameters = action_plan.get("parameters", {})
 
-    # ----------------------------
-    # VALIDATION
-    # ----------------------------
-    if not path:
-        return {"error": "Missing API path in action plan"}
-
     if not parameters:
-        return {"error": "Missing parameters for CREATE operation"}
+        return {"error": "parameters required for CREATE", "details": "action_plan.parameters is empty"}
 
-    record_type = parameters.get("RecordRecordType")
-    record_title = parameters.get("RecordTitle")
-
-    if not record_type or not record_title:
-        return {
-            "error": "Missing required fields",
-            "required": ["RecordRecordType", "RecordTitle"],
-        }
-
-    # ----------------------------
-    # BUILD PAYLOAD
-    # ----------------------------
-    payload = {
-        "RecordRecordType": record_type,
-        "RecordTitle": record_title,
-    }
-
-    # ----------------------------
-    # FINAL URL
-    # ----------------------------
-    url = f"{BASE_URL}/{path}"
-
-    print("\n[MCP] Executing POST request:")
-    print(url)
-    print("Payload:", payload)
+    print("\n[MCP] Executing POST request (CREATE):")
+    print(BASE_URL)
+    print(parameters)
 
     try:
-        response = requests.post(
-            url,
-            json=payload,
-            timeout=10,
-        )
+        response = requests.post(BASE_URL, json=parameters)
         response.raise_for_status()
-        return response.json()
-
+        try:
+            return response.json()
+        except Exception:
+            return {"status_code": response.status_code, "text": response.text}
     except Exception as e:
         return {
-            "error": "POST request failed",
-            "details": str(e),
+            "error": "POST request failed (CREATE)",
+            "details": str(e)
         }
