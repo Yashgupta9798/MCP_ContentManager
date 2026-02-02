@@ -1,5 +1,7 @@
-EXAMPLE 1
+IMPORTANT - DO NOT USE THIS AS IT IS.
 
+EXAMPLE 1
+THIS IS FOR SEARCH
 Query: Find record numbered 26/1
 Intent: SEARCH
 Action Plan:
@@ -15,7 +17,7 @@ Action Plan:
 }
 
 EXAMPLE 2
-
+THIS IS FOR SEARCH
 Query: Find all records created on 19th January, 2026
 Intent: SEARCH
 Action Plan:
@@ -31,7 +33,7 @@ Action Plan:
 }
 
 EXAMPLE 3
-
+THIS IS FOR CREATE
 Query: Make a new document with name "My_doc".
 Intent: CREATE
 Action Plan:
@@ -46,7 +48,7 @@ Action Plan:
 }
 
 EXAMPLE 4
-
+THIS IS FOR UPDATE
 Query: Update the record numbered 26/1, to title "updated_title"
 
 {
@@ -62,3 +64,6 @@ Query: Update the record numbered 26/1, to title "updated_title"
   },
   "operation":"UPDATE"
 }
+
+
+DO NOT USE THIS AS IT IS.
