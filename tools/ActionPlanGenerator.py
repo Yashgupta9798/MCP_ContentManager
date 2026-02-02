@@ -40,7 +40,8 @@ class ActionPlanGenerator:
         retrieved_docs = ToolRetriever().match(user_query)
         print(retrieved_docs)
         prompt = open(f"prompts/tool_selection_prompt.md").read()
-        prompt = prompt + f"\n\nUser query:\n{user_query}\n\nUser intent:\n{intent}\n\nRetrieved documents:\n{retrieved_docs}"
+        example = open("prompts/example_prompt.md").read()
+        prompt = prompt + f"\n\nUser query:\n{user_query}\n\nUser intent:\n{intent}\n\nRetrieved documents:\n{retrieved_docs}\n\nExamples:\n{example}\n\n"
 
         response = self.llm.invoke(prompt)
         print(response.content)

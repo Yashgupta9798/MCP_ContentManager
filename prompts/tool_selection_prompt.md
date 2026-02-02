@@ -24,7 +24,7 @@ Always set format = "json", properties = "NameString", method = "GET", path = "R
 
 If the user explicitly provides record number, record title, record type, created date, or status, include those keys only in parameters with the exact names number, combinedtitle, type, createdon, editstatus and the values the user gave.
 
-IMPORTANT: Remember to keep the user provided values before format and properties. Also Do NOT add these keys otherwise, means if user didn't provide value of that key then do not include in json, and do not invent or default values, DON'T use values like None or Null.
+IMPORTANT: Remember to keep the user provided values before format and properties. Also Do NOT add these keys otherwise, means if user didn't provide value of that key then do not include in json, and do not invent or default values, DON'T use values like None or Null. Always use mm/dd/yyyy format.
 
 Normalize type tokens (case-insensitive) — e.g. "document", "doc", "docs", "file" : "Document"; "folder", "dir", "directory" : "Folder". Include type only if the user mentioned a type token. Example: phrases like "this document" or "I want this document" imply "type":"Document" for SEARCH.
 
