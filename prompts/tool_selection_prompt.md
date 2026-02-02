@@ -26,7 +26,9 @@ If the user explicitly provides record number, record title, record type, create
 
 IMPORTANT: Remember to keep the user provided values before format and properties. Also Do NOT add these keys otherwise, means if user didn't provide value of that key then do not include in json, and do not invent or default values, DON'T use values like None or Null.
 
-Normalize type tokens (case-insensitive) — e.g. "document", "doc", "docs", "file" → "Document"; "folder", "dir", "directory" → "Folder". Include type only if the user mentioned a type token. Example: phrases like "this document" or "I want this document" imply "type":"Document" for SEARCH.
+Normalize type tokens (case-insensitive) — e.g. "document", "doc", "docs", "file" : "Document"; "folder", "dir", "directory" : "Folder". Include type only if the user mentioned a type token. Example: phrases like "this document" or "I want this document" imply "type":"Document" for SEARCH.
+
+
 
 CREATE
 
@@ -36,18 +38,58 @@ Return this shape:
   "path":"Record/",
   "method":"POST",
   "parameters":{
-    "RecordRecordType":"Document"|"Folder",
+    "RecordRecordType":<extracted_type>,
     "RecordTitle":"<extracted_title>"
   },
   "operation":"CREATE"
 }
 
+ALWAYS INCLUDE THESE FIELDS (no exceptions):
 
-Infer RecordType from user tokens ("document"/"doc"/"file" → Document; "folder"/"dir" → Folder). Default to "Document" only if creating and the type is genuinely ambiguous.
+"path" : "Record/"
+"method" : "POST"
+"operation" : "CREATE"
 
-Extract a clear RecordTitle from the query. Always use method = "POST" and path = "Record/".
+PARAMETERS OBJECT RULES:
+"parameters" must exist only if at least one valid parameter is extracted
+If no parameters are extracted, return:
+"parameters": {}
 
-Also add RecordNumber, RecordDateCreated and RecordEditState if these are provided in the user query.
+OPTIONAL PARAMETERS (STRICT EXTRACTION RULES)
+Include a parameter ONLY IF the user explicitly provides a value.
+
+"RecordTitle"
+Include only if the user clearly states a title or name.
+The value must be exactly what the user provided.
+
+Do NOT infer titles from phrases like:
+"create a record"
+"add a record"
+"make a new record"
+
+
+"RecordRecordType"
+Include only if the user explicitly mentions a type.
+Allowed mappings:
+"document", "doc", "file" -> "Document"
+"folder", "dir" -> "Folder"
+Do NOT assume a type.
+
+
+"RecordNumber", "RecordDateCreated", "RecordEditState"
+Include only if explicitly provided by the user.
+
+ABSOLUTE RULES (VERY IMPORTANT):
+NEVER add keys with empty strings
+NEVER add keys with null, None, or placeholders
+NEVER invent, infer, guess, or default values
+NEVER convert generic phrases into titles
+
+If a value is not provided : DO NOT include the key
+Output valid JSON only, no explanation text
+
+Don't reply anything except json format
+
 
 UPDATE
 
