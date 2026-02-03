@@ -2,7 +2,7 @@ import requests
 from urllib.parse import urlencode
 
 # BASE_URL = "http://localhost/CMServiceAPI/Record?q="
-BASE_URL = "http://10.194.93.171/CMServiceAPI/Record?q="
+BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
 
 
 async def search_records_impl(action_plan: dict) -> dict:
