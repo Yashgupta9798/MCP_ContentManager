@@ -1,14 +1,61 @@
+"""
+Search Records Tool for Content Manager MCP Server.
+
+PURPOSE: Execute search queries against the Content Manager API to find/retrieve records.
+
+WHEN TO USE: Call this tool when the action plan has operation="SEARCH".
+             This tool should be called AFTER 'generate_action_plan' tool.
+
+INPUT: An action_plan dict with the following structure:
+{
+    "path": "Record/",
+    "method": "GET", 
+    "parameters": {
+        "number": "<record_number>",      # optional
+        "combinedtitle": "<title>",       # optional
+        "type": "Document|Folder",        # optional
+        "createdon": "mm/dd/yyyy",        # optional
+        "editstatus": "checkin|checkout", # optional
+        "format": "json",
+        "properties": "NameString"
+    },
+    "operation": "SEARCH"
+}
+
+OUTPUT: JSON response from Content Manager API with search results.
+
+WORKFLOW POSITION: This is typically the FINAL tool in a SEARCH workflow.
+                   detect_intent -> generate_action_plan -> search_records
+"""
+
 import requests
 from urllib.parse import urlencode
 
 # BASE_URL = "http://localhost/CMServiceAPI/Record?q="
-BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
+# BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
+BASE_URL = "https://cmbeta.in/CMServiceAPI/Record?q="
 
 
 async def search_records_impl(action_plan: dict) -> dict:
     """
     Search records in Content Manager.
-    MCP-style implementation: accepts action_plan dict.
+    
+    This tool executes a GET request to the Content Manager API to search for records.
+    It should be called AFTER the 'generate_action_plan' tool has created a SEARCH action plan.
+    
+    Args:
+        action_plan: A dict containing:
+            - path: "Record/" (API endpoint path)
+            - method: "GET"
+            - parameters: Search parameters (number, combinedtitle, type, createdon, editstatus, format, properties)
+            - operation: "SEARCH"
+            
+    Returns:
+        dict: JSON response from Content Manager API containing search results.
+              Results are in the "Results" array with record details.
+    
+    WORKFLOW: This is the FINAL tool for SEARCH operations.
+              Previous steps: detect_intent -> generate_action_plan -> search_records
     """
     print("-------------------------------- Inside search_records_impl --------------------------------", flush=True)
     parameters = action_plan.get("parameters", {})
