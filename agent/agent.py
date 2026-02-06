@@ -45,11 +45,12 @@ class Agent:
         Handle user query with full authentication flow.
         
         WORKFLOW ORDER:
-        1. authenticate_user - Get user email via Okta OAuth
-        2. validate_email - Verify email exists in Content Manager
-        3. detect_intent - Classify user intent
-        4. generate_action_plan - Create action plan
-        5. Execute operation (search/create/update)
+        1. authenticate_user - Get user email via Okta OAuth (once per session)
+        2. validate_email - Verify email exists in Content Manager (once per session)
+        3. detect_intent - Classify user intent (EVERY query)
+        4. check_authorization - Verify user can perform the intent (EVERY query)
+        5. generate_action_plan - Create action plan
+        6. Execute operation (search/create/update)
         """
         
         # -----------------------
@@ -91,23 +92,38 @@ class Agent:
             print(f"[AGENT] User already validated: {self._authenticated_email}")
         
         # -----------------------
-        # STEP 3: INTENT DETECTION
+        # STEP 3: INTENT DETECTION (called for EVERY query)
         # -----------------------
         print("\n[AGENT] STEP 3: Detecting intent...")
         intent = self.intent_router.detect_intent(user_query)
         print(f"[AGENT] Detected intent: {intent}")
 
         # -----------------------
-        # STEP 4: ACTION PLAN GENERATION
+        # STEP 4: AUTHORIZATION CHECK (called for EVERY query)
         # -----------------------
-        print("\n[AGENT] STEP 4: Generating action plan...")
+        print("\n[AGENT] STEP 4: Checking authorization...")
+        auth_check_result = await self._check_authorization(self._authenticated_email, intent)
+        
+        if not auth_check_result.get("authorized", False):
+            error_msg = auth_check_result.get("error", "Authorization failed")
+            allowed_ops = auth_check_result.get("allowed_operations", [])
+            user_type = auth_check_result.get("user_type", "Unknown")
+            print(f"[AGENT] ERROR: Authorization denied: {error_msg}")
+            return f"Authorization denied: {error_msg}. Your user type '{user_type}' can only perform: {', '.join(allowed_ops) if allowed_ops else 'no operations'}."
+        
+        print(f"[AGENT] SUCCESS: User authorized for {intent}")
+
+        # -----------------------
+        # STEP 5: ACTION PLAN GENERATION
+        # -----------------------
+        print("\n[AGENT] STEP 5: Generating action plan...")
         action_plan = ActionPlanGenerator().run(user_query, intent)
         print(f"[AGENT] Action Plan Generated: {action_plan}")
 
         # -----------------------
-        # STEP 5: EXECUTION (MCP) — no direct tool calling; all via MCP server
+        # STEP 6: EXECUTION (MCP) — no direct tool calling; all via MCP server
         # -----------------------
-        print("\n[AGENT] STEP 5: Executing operation via MCP...")
+        print("\n[AGENT] STEP 6: Executing operation via MCP...")
         response = await self._execute_via_mcp(action_plan)
 
         print("\n[AGENT] Final Response:")
@@ -148,6 +164,21 @@ class Agent:
         except Exception as e:
             print(f"[AGENT] Email validation error: {e}")
             return {"valid": False, "error": str(e)}
+
+    async def _check_authorization(self, email: str, intent: str) -> dict:
+        """Call check_authorization MCP tool to verify user can perform the intent."""
+        try:
+            async with inprocess_mcp_streams() as (read_stream, write_stream):
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    result = await session.call_tool(
+                        "check_authorization",
+                        arguments={"email": email, "intent": intent},
+                    )
+                    return _parse_result_to_dict(result)
+        except Exception as e:
+            print(f"[AGENT] Authorization check error: {e}")
+            return {"authorized": False, "error": str(e)}
 
     # -------------------------------------------------
     # MCP EXECUTOR — spawn MCP server via stdio, call tool by name

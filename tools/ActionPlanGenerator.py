@@ -4,11 +4,12 @@ Action Plan Generator Tool for MCP Server.
 This tool returns the system prompt for generating action plans.
 The actual LLM processing is done by the MCP client (e.g., Claude).
 
-WORKFLOW: This is STEP 4 - called after:
+WORKFLOW: This is STEP 5 - called after:
          1. authenticate_user
          2. validate_email
          3. detect_intent
-NEXT STEP: After generating the action plan, call the appropriate tool (STEP 5)
+         4. check_authorization
+NEXT STEP: After generating the action plan, call the appropriate tool (STEP 6)
            based on the operation in the action plan:
            - If operation is "SEARCH" -> call 'search_records' tool
            - If operation is "CREATE" -> call 'create_record' tool  

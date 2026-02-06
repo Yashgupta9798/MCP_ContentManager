@@ -5,8 +5,9 @@ TOOL WORKFLOW (in order):
 1. authenticate_user    - FIRST: Authenticate user via Okta OAuth
 2. validate_email       - SECOND: Validate email exists in Content Manager
 3. detect_intent        - THIRD: Detect user intent from query
-4. generate_action_plan - FOURTH: Generate action plan based on intent
-5. search_records / create_record / update_record - FIFTH: Execute the operation
+4. check_authorization  - FOURTH: Check if user is authorized for the intent
+5. generate_action_plan - FIFTH: Generate action plan based on intent
+6. search_records / create_record / update_record - SIXTH: Execute the operation
 
 All LLM processing is done by the MCP client (Claude, Copilot, etc.).
 The tools return system prompts and context; the client does the reasoning.
@@ -29,6 +30,7 @@ from tools.intent_detection import get_intent_prompt_impl
 from tools.ActionPlanGenerator import generate_action_plan_impl
 from tools.authentication import authenticate_user_impl
 from tools.email_validator import validate_email_impl
+from tools.authorization import check_authorization_impl
 
 mcp = FastMCP(
     name="CM Tools",
@@ -46,15 +48,19 @@ mcp = FastMCP(
         "3. THIRD: Call 'detect_intent' tool with the user's query.\n"
         "   - This returns a system prompt for intent classification.\n"
         "   - Use the prompt to classify intent as: CREATE, UPDATE, SEARCH, or HELP.\n\n"
-        "4. FOURTH: Call 'generate_action_plan' tool with user_query and detected intent.\n"
+        "4. FOURTH: Call 'check_authorization' tool with email and detected intent.\n"
+        "   - Verifies if the user type is allowed to perform the intent.\n"
+        "   - If not authorized, STOP - do not proceed.\n"
+        "   - If authorized, proceed to generate action plan.\n\n"
+        "5. FIFTH: Call 'generate_action_plan' tool with user_query and detected intent.\n"
         "   - This returns a system prompt for action plan generation.\n"
         "   - Use the prompt to generate a valid JSON action plan.\n\n"
-        "5. FIFTH: Call the appropriate execution tool based on the action plan's 'operation':\n"
+        "6. SIXTH: Call the appropriate execution tool based on the action plan's 'operation':\n"
         "   - operation='SEARCH' -> call 'search_records' with the action_plan\n"
         "   - operation='CREATE' -> call 'create_record' with the action_plan\n"
         "   - operation='UPDATE' -> call 'update_record' with the action_plan\n\n"
         "NEVER skip steps. Always start with authenticate_user for any user query.\n"
-        "If authentication or email validation fails, do NOT call any other tools."
+        "If authentication, email validation, or authorization fails, do NOT call any other tools."
     ),
 )
 
@@ -126,18 +132,53 @@ async def detect_intent(user_query: str) -> dict:
         - system_prompt: The prompt to use for intent classification
         - user_query: The original query
         - instruction: How to process and respond
-        - next_step: What tool to call next (generate_action_plan)
+        - next_step: What tool to call next (check_authorization)
         
-    NEXT STEP: After detecting intent, call 'generate_action_plan' tool
-               with the user_query and detected intent.
+    NEXT STEP: After detecting intent, call 'check_authorization' tool
+               with the email and detected intent.
     """
     return await get_intent_prompt_impl(user_query)
 
 
 @mcp.tool()
+async def check_authorization(email: str, intent: str) -> dict:
+    """
+    STEP 4 (CALL AFTER detect_intent): Check if user is authorized for the operation.
+    
+    This tool verifies that the user's type allows them to perform the detected intent.
+    
+    Authorization rules by user type:
+    - Inquiry User: SEARCH only
+    - Administrator: SEARCH, CREATE, UPDATE
+    - Records Manager: SEARCH, CREATE, UPDATE
+    - Records Co-ordinator: SEARCH, CREATE, UPDATE
+    - Knowledge Worker: SEARCH, CREATE, UPDATE
+    - Contributor: SEARCH, CREATE
+    
+    Args:
+        email: The user's email address (from validate_email step 2).
+        intent: The detected intent (CREATE, UPDATE, SEARCH, or HELP).
+        
+    Returns:
+        dict containing:
+        - authorized: True/False
+        - user_type: The user's type in Content Manager
+        - intent: The operation being authorized
+        - message: Success message (if authorized)
+        - error: Failure reason (if not authorized)
+        - allowed_operations: List of operations this user can perform
+        - next_step: What tool to call next
+        
+    NEXT STEP: If authorized=True, call 'generate_action_plan' tool with user_query and intent.
+               If authorized=False, STOP - do not call any other tools.
+    """
+    return await check_authorization_impl(email, intent)
+
+
+@mcp.tool()
 async def generate_action_plan(user_query: str, intent: str) -> dict:
     """
-    STEP 4 (CALL AFTER detect_intent): Generate action plan for the operation.
+    STEP 5 (CALL AFTER check_authorization): Generate action plan for the operation.
     
     This tool returns a system prompt for generating a structured action plan.
     YOU (the MCP client) must use this prompt to create a valid JSON action plan.
@@ -166,12 +207,12 @@ async def generate_action_plan(user_query: str, intent: str) -> dict:
 @mcp.tool()
 async def search_records(action_plan: dict) -> dict:
     """
-    STEP 5 - SEARCH: Execute a search query in Content Manager.
+    STEP 6 - SEARCH: Execute a search query in Content Manager.
     
     Call this tool AFTER generate_action_plan when operation='SEARCH'.
     
     Args:
-        action_plan: The JSON action plan generated in Step 4 with structure:
+        action_plan: The JSON action plan generated in Step 5 with structure:
             {
                 "path": "Record/",
                 "method": "GET",
@@ -190,7 +231,7 @@ async def search_records(action_plan: dict) -> dict:
     Returns:
         dict: JSON response from Content Manager API with search results.
         
-    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> generate_action_plan -> search_records (FINAL)
+    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> check_authorization -> generate_action_plan -> search_records (FINAL)
     """
     return await search_records_impl(action_plan)
 
@@ -198,12 +239,12 @@ async def search_records(action_plan: dict) -> dict:
 @mcp.tool()
 async def create_record(action_plan: dict) -> dict:
     """
-    STEP 5 - CREATE: Create a new record in Content Manager.
+    STEP 6 - CREATE: Create a new record in Content Manager.
     
     Call this tool AFTER generate_action_plan when operation='CREATE'.
     
     Args:
-        action_plan: The JSON action plan generated in Step 4 with structure:
+        action_plan: The JSON action plan generated in Step 5 with structure:
             {
                 "path": "Record/",
                 "method": "POST",
@@ -221,7 +262,7 @@ async def create_record(action_plan: dict) -> dict:
         dict: JSON response from Content Manager API with created record details.
         
     IMPORTANT: RecordTitle and RecordRecordType are MANDATORY.
-    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> generate_action_plan -> create_record (FINAL)
+    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> check_authorization -> generate_action_plan -> create_record (FINAL)
     """
     return await create_record_impl(action_plan)
 
@@ -229,12 +270,12 @@ async def create_record(action_plan: dict) -> dict:
 @mcp.tool()
 async def update_record(action_plan: dict) -> dict:
     """
-    STEP 5 - UPDATE: Update an existing record in Content Manager.
+    STEP 6 - UPDATE: Update an existing record in Content Manager.
     
     Call this tool AFTER generate_action_plan when operation='UPDATE'.
     
     Args:
-        action_plan: The JSON action plan generated in Step 4 with structure:
+        action_plan: The JSON action plan generated in Step 5 with structure:
             {
                 "path": "Record/",
                 "method": "POST",
@@ -258,7 +299,7 @@ async def update_record(action_plan: dict) -> dict:
     Returns:
         dict: JSON response from Content Manager API with updated record details.
         
-    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> generate_action_plan -> update_record (FINAL)
+    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> check_authorization -> generate_action_plan -> update_record (FINAL)
     """
     return await update_record_impl(action_plan)
 

@@ -5,7 +5,7 @@ This tool returns the system prompt for intent classification.
 The actual LLM processing is done by the MCP client (e.g., Claude).
 
 WORKFLOW: This is STEP 3 - called after authenticate_user (1) and validate_email (2).
-NEXT STEP: After getting the intent, call the 'generate_action_plan' tool (step 4).
+NEXT STEP: After getting the intent, call the 'check_authorization' tool (step 4).
 """
 
 import os
@@ -45,5 +45,5 @@ async def get_intent_prompt_impl(user_query: str) -> dict:
         "system_prompt": system_prompt,
         "user_query": user_query,
         "instruction": "Use the system_prompt to classify the user_query into exactly ONE intent (CREATE, UPDATE, SEARCH, or HELP). Return JSON format: {\"intent\": \"<INTENT>\"}",
-        "next_step": "After detecting the intent, call the 'generate_action_plan' tool with the user_query and the detected intent."
+        "next_step": "After detecting the intent, call the 'check_authorization' tool with the email and the detected intent."
     }
