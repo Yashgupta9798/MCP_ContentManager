@@ -4,8 +4,8 @@ Intent Detection Tool for MCP Server.
 This tool returns the system prompt for intent classification.
 The actual LLM processing is done by the MCP client (e.g., Claude).
 
-WORKFLOW: This is the FIRST tool to be called when a user enters a query.
-NEXT STEP: After getting the intent, call the 'generate_action_plan' tool.
+WORKFLOW: This is STEP 3 - called after authenticate_user (1) and validate_email (2).
+NEXT STEP: After getting the intent, call the 'generate_action_plan' tool (step 4).
 """
 
 import os

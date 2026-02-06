@@ -19,3 +19,7 @@ mcp-server
 fastapi
 uvicorn
 tabulate
+
+# Authentication
+python-jose[cryptography]
+python-dotenv

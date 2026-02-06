@@ -43,12 +43,12 @@ from urllib.parse import urlencode
 
 # BASE URLs
 # SEARCH (GET)
-# SEARCH_BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
-SEARCH_BASE_URL = "https://cmbeta.in/CMServiceAPI/Record?q="
+SEARCH_BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
+# SEARCH_BASE_URL = "https://cmbeta.in/CMServiceAPI/Record?q="
 
 # UPDATE (POST)
-# UPDATE_BASE_URL = "http://10.194.93.112/CMServiceAPI/Record"
-UPDATE_BASE_URL = "https://cmbeta.in/CMServiceAPI/Record"
+UPDATE_BASE_URL = "http://10.194.93.112/CMServiceAPI/Record"
+# UPDATE_BASE_URL = "https://cmbeta.in/CMServiceAPI/Record"
 
 async def update_record_impl(action_plan: dict) -> dict:
     """
