@@ -22,9 +22,12 @@ from jose import jwt
 # ==============================
 # OKTA CONFIGURATION (Hardcoded)
 # ==============================
-OKTA_DOMAIN = "https://integrator-3291278.okta.com"
-CLIENT_ID = "0oaztakr35wCwuEWk697"
-CLIENT_SECRET = "PcaUJ5DfaAM-5mwKEY_iIYYyFOhgNnKvYylDjFsxBQSWSg7V_K3oTph41_cZFWPQ"
+# OKTA_DOMAIN = "https://integrator-3291278.okta.com"
+OKTA_DOMAIN = "https://integrator-4714775.okta.com"
+# CLIENT_ID = "0oaztakr35wCwuEWk697"
+CLIENT_ID = "0oaztaww8zVWgsbOt697"
+# CLIENT_SECRET = "PcaUJ5DfaAM-5mwKEY_iIYYyFOhgNnKvYylDjFsxBQSWSg7V_K3oTph41_cZFWPQ"
+CLIENT_SECRET = "iDz4Y-bcm_dTyNInq6YP7YBpC-MckB3L6esxyMBj75BEAGn7gavQBVsv7ToWKS6F"
 REDIRECT_URI = "http://localhost:8080/authorization-code/callback"
 ISSUER = OKTA_DOMAIN  # Same as OKTA_DOMAIN for ORG server
 
