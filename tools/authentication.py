@@ -18,18 +18,26 @@ from urllib.parse import urlencode, urlparse, parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 from jose import jwt
+import os
 
 # ==============================
 # OKTA CONFIGURATION (Hardcoded)
 # ==============================
 # OKTA_DOMAIN = "https://integrator-3291278.okta.com"
-OKTA_DOMAIN = "https://integrator-4714775.okta.com"
-# CLIENT_ID = "0oaztakr35wCwuEWk697"
-CLIENT_ID = "0oaztaww8zVWgsbOt697"
-# CLIENT_SECRET = "PcaUJ5DfaAM-5mwKEY_iIYYyFOhgNnKvYylDjFsxBQSWSg7V_K3oTph41_cZFWPQ"
-CLIENT_SECRET = "iDz4Y-bcm_dTyNInq6YP7YBpC-MckB3L6esxyMBj75BEAGn7gavQBVsv7ToWKS6F"
-REDIRECT_URI = "http://localhost:8080/authorization-code/callback"
-ISSUER = OKTA_DOMAIN  # Same as OKTA_DOMAIN for ORG server
+# OKTA_DOMAIN = "https://integrator-4714775.okta.com"
+# # CLIENT_ID = "0oaztakr35wCwuEWk697"
+# CLIENT_ID = "0oaztaww8zVWgsbOt697"
+# # CLIENT_SECRET = "PcaUJ5DfaAM-5mwKEY_iIYYyFOhgNnKvYylDjFsxBQSWSg7V_K3oTph41_cZFWPQ"
+# CLIENT_SECRET = "iDz4Y-bcm_dTyNInq6YP7YBpC-MckB3L6esxyMBj75BEAGn7gavQBVsv7ToWKS6F"
+# REDIRECT_URI = "http://localhost:8080/authorization-code/callback"
+# ISSUER = OKTA_DOMAIN  # Same as OKTA_DOMAIN for ORG server
+
+
+OKTA_DOMAIN = os.getenv("OKTA_DOMAIN")
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
+ISSUER = os.getenv("ISSUER")
 
 # Global variable to store the auth code received from callback
 _auth_code = None
