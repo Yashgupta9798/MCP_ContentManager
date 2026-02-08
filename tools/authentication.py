@@ -39,6 +39,12 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 ISSUER = os.getenv("ISSUER")
 
+# Token storage paths
+# Server token is stored in the project folder
+SERVER_TOKEN_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "server_token.txt")
+# Client token path is configured in Claude's config file (env variable)
+CLIENT_TOKEN_PATH = os.getenv("CLIENT_TOKEN_PATH")
+
 # Global variable to store the auth code received from callback
 _auth_code = None
 _auth_error = None
@@ -216,6 +222,55 @@ def _validate_id_token(id_token: str) -> dict:
     return claims
 
 
+def _store_tokens(id_token: str) -> dict:
+    """
+    Store the ID token in both server_token.txt and client_token.txt.
+    
+    Args:
+        id_token: The JWT ID token from Okta.
+        
+    Returns:
+        dict: Status of token storage with paths.
+    """
+    result = {
+        "server_token_stored": False,
+        "client_token_stored": False,
+        "server_token_path": SERVER_TOKEN_PATH,
+        "client_token_path": CLIENT_TOKEN_PATH
+    }
+    
+    # Store in server_token.txt (project folder)
+    try:
+        with open(SERVER_TOKEN_PATH, "w") as f:
+            f.write(id_token)
+        result["server_token_stored"] = True
+        print(f"[AUTH] Token stored in server_token.txt: {SERVER_TOKEN_PATH}")
+    except Exception as e:
+        print(f"[AUTH] ERROR: Failed to store server token: {str(e)}")
+        result["server_token_error"] = str(e)
+    
+    # Store in client_token.txt (path from Claude config)
+    if CLIENT_TOKEN_PATH:
+        try:
+            # Create directory if it doesn't exist
+            client_dir = os.path.dirname(CLIENT_TOKEN_PATH)
+            if client_dir and not os.path.exists(client_dir):
+                os.makedirs(client_dir, exist_ok=True)
+            
+            with open(CLIENT_TOKEN_PATH, "w") as f:
+                f.write(id_token)
+            result["client_token_stored"] = True
+            print(f"[AUTH] Token stored in client_token.txt: {CLIENT_TOKEN_PATH}")
+        except Exception as e:
+            print(f"[AUTH] ERROR: Failed to store client token: {str(e)}")
+            result["client_token_error"] = str(e)
+    else:
+        result["client_token_error"] = "CLIENT_TOKEN_PATH not configured in environment"
+        print("[AUTH] WARNING: CLIENT_TOKEN_PATH not configured - client token not stored")
+    
+    return result
+
+
 async def authenticate_user_impl() -> dict:
     """
     Perform full Okta OAuth2 authentication flow.
@@ -224,14 +279,17 @@ async def authenticate_user_impl() -> dict:
     1. Opens the browser to Okta login page
     2. Starts a local server to capture the callback
     3. Exchanges the auth code for tokens
-    4. Validates the ID token and extracts user email
+    4. Stores ID token in server_token.txt and client_token.txt
+    5. Validates the ID token and extracts user email
     
     Returns:
-        dict: Contains user email and authentication status.
+        dict: Contains user email, token, and authentication status.
               {
                   "authenticated": True/False,
                   "email": "user@example.com",
                   "name": "User Name",
+                  "token": "id_token_value",
+                  "token_storage": {...},
                   "error": "Error message if failed"
               }
     
@@ -264,6 +322,10 @@ async def authenticate_user_impl() -> dict:
                 "error": "No ID token received from Okta"
             }
         
+        # Store tokens in server_token.txt and client_token.txt BEFORE email extraction
+        print("[AUTH] Storing tokens...")
+        token_storage_result = _store_tokens(id_token)
+        
         # Validate ID token and extract claims
         print("[AUTH] Validating ID token...")
         claims = _validate_id_token(id_token)
@@ -277,6 +339,8 @@ async def authenticate_user_impl() -> dict:
             "authenticated": True,
             "email": email,
             "name": name,
+            "token": id_token,
+            "token_storage": token_storage_result,
             "instruction": "User is authenticated. Now call 'validate_email' tool to verify this email exists in Content Manager.",
             "next_step": "Call 'validate_email' tool with this email address."
         }

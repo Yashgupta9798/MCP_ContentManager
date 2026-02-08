@@ -2,12 +2,21 @@
 Unified MCP server exposing Content Manager tools.
 
 TOOL WORKFLOW (in order):
-1. authenticate_user    - FIRST: Authenticate user via Okta OAuth
+
+FIRST QUERY IN CHAT:
+1. authenticate_user    - FIRST: Authenticate user via Okta OAuth (stores tokens)
 2. validate_email       - SECOND: Validate email exists in Content Manager
 3. detect_intent        - THIRD: Detect user intent from query
 4. check_authorization  - FOURTH: Check if user is authorized for the intent
 5. generate_action_plan - FIFTH: Generate action plan based on intent
 6. search_records / create_record / update_record - SIXTH: Execute the operation
+
+SUBSEQUENT QUERIES IN SAME CHAT:
+1. compare_token        - FIRST: Verify user is same as authenticated user
+2. detect_intent        - SECOND: Detect user intent from query
+3. check_authorization  - THIRD: Check if user is authorized for the intent
+4. generate_action_plan - FOURTH: Generate action plan based on intent
+5. search_records / create_record / update_record - FIFTH: Execute the operation
 
 All LLM processing is done by the MCP client (Claude, Copilot, etc.).
 The tools return system prompts and context; the client does the reasoning.
@@ -31,15 +40,18 @@ from tools.ActionPlanGenerator import generate_action_plan_impl
 from tools.authentication import authenticate_user_impl
 from tools.email_validator import validate_email_impl
 from tools.authorization import check_authorization_impl
+from tools.compare_token import compare_token_impl
 
 mcp = FastMCP(
     name="CM Tools",
     instructions=(
         "Content Manager MCP Server for search, create, and update operations.\n\n"
-        "IMPORTANT WORKFLOW - Follow these steps IN ORDER for every user query:\n\n"
+        "IMPORTANT: There are TWO different workflows depending on whether this is the FIRST query or a SUBSEQUENT query in the chat.\n\n"
+        "=== FIRST QUERY IN CHAT (User has not authenticated yet) ===\n"
         "1. FIRST: Call 'authenticate_user' tool (NO PARAMETERS NEEDED).\n"
         "   - This opens the browser for Okta login.\n"
-        "   - Returns the authenticated user's email address.\n"
+        "   - Returns the authenticated user's email address and token.\n"
+        "   - Stores tokens in server_token.txt and client_token.txt for later verification.\n"
         "   - If authentication fails, STOP - do not proceed.\n\n"
         "2. SECOND: Call 'validate_email' tool with the email from step 1.\n"
         "   - Verifies the email exists in Content Manager.\n"
@@ -59,8 +71,19 @@ mcp = FastMCP(
         "   - operation='SEARCH' -> call 'search_records' with the action_plan\n"
         "   - operation='CREATE' -> call 'create_record' with the action_plan\n"
         "   - operation='UPDATE' -> call 'update_record' with the action_plan\n\n"
-        "NEVER skip steps. Always start with authenticate_user for any user query.\n"
-        "If authentication, email validation, or authorization fails, do NOT call any other tools."
+        "=== SUBSEQUENT QUERIES IN SAME CHAT (User already authenticated) ===\n"
+        "1. FIRST: Call 'compare_token' tool (NO PARAMETERS NEEDED).\n"
+        "   - Compares server_token.txt and client_token.txt to verify same user.\n"
+        "   - If tokens DON'T match, STOP - tell user to start a new chat.\n"
+        "   - If tokens match, proceed to detect_intent.\n\n"
+        "2. SECOND: Call 'detect_intent' tool with the user's query.\n\n"
+        "3. THIRD: Call 'check_authorization' tool with email and detected intent.\n\n"
+        "4. FOURTH: Call 'generate_action_plan' tool with user_query and detected intent.\n\n"
+        "5. FIFTH: Call the appropriate execution tool (search_records/create_record/update_record).\n\n"
+        "SECURITY: The compare_token step ensures that if someone else logs in and tries to use\n"
+        "an existing chat session, they will be blocked. Token mismatch = potential session hijacking.\n\n"
+        "NEVER skip steps. Always start with authenticate_user for FIRST query, compare_token for SUBSEQUENT queries.\n"
+        "If authentication, token comparison, email validation, or authorization fails, do NOT call any other tools."
     ),
 )
 
@@ -68,25 +91,65 @@ mcp = FastMCP(
 @mcp.tool()
 async def authenticate_user() -> dict:
     """
-    STEP 1 (FIRST TOOL TO CALL): Authenticate user via Okta OAuth.
+    STEP 1 - FIRST QUERY ONLY (FIRST TOOL TO CALL): Authenticate user via Okta OAuth.
     
     This tool opens the browser for Okta login, captures the OAuth callback,
-    exchanges the auth code for tokens, and returns the user's email.
+    exchanges the auth code for tokens, stores tokens for verification, and returns the user's email.
     
     NO PARAMETERS NEEDED - just call this tool to start authentication.
+    
+    Token Storage:
+    - Stores id_token in server_token.txt (project folder)
+    - Stores id_token in client_token.txt (path from Claude config)
+    - These tokens are used by compare_token for subsequent queries
     
     Returns:
         dict containing:
         - authenticated: True/False
         - email: The user's email address (if successful)
         - name: The user's display name (if successful)
+        - token: The id_token for verification (if successful)
+        - token_storage: Token storage status details
         - error: Error message (if failed)
         - next_step: What tool to call next (validate_email)
         
     NEXT STEP: If authenticated=True, call 'validate_email' tool with the email.
                If authenticated=False, STOP - do not call any other tools.
+    
+    NOTE: Only call this for the FIRST query in a chat.
+          For subsequent queries, use 'compare_token' instead.
     """
     return await authenticate_user_impl()
+
+
+@mcp.tool()
+async def compare_token() -> dict:
+    """
+    STEP 1 - SUBSEQUENT QUERIES ONLY: Verify user is same as authenticated user.
+    
+    This tool compares tokens stored in server_token.txt and client_token.txt
+    to verify that the current user is the same as the originally authenticated user.
+    
+    SECURITY: This prevents session hijacking where someone else logs in and
+    tries to use an existing chat session.
+    
+    NO PARAMETERS NEEDED - just call this tool to verify the user.
+    
+    Returns:
+        dict containing:
+        - tokens_match: True/False
+        - verified: True/False (same as tokens_match)
+        - message: Success message (if tokens match)
+        - error: Error message (if tokens don't match)
+        - next_step: What tool to call next
+        
+    NEXT STEP: If tokens_match=True, call 'detect_intent' tool with the user's query.
+               If tokens_match=False, STOP - tell user to start a new chat.
+    
+    NOTE: Only call this for SUBSEQUENT queries (2nd, 3rd, etc.) in a chat.
+          For the FIRST query, use 'authenticate_user' instead.
+    """
+    return await compare_token_impl()
 
 
 @mcp.tool()
