@@ -58,7 +58,7 @@ async def validate_email_impl(email: str) -> dict:
         "Accept": "application/json"
     }
     
-    print(f"\n[EMAIL_VALIDATOR] Checking if email exists in Content Manager: {email}")
+   # print(f"\n[EMAIL_VALIDATOR] Checking if email exists in Content Manager: {email}")
 
     # response = requests.get(url, params=params, headers=headers)
     # if(len(response.get("Results")) == 0):

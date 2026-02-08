@@ -57,7 +57,7 @@ async def search_records_impl(action_plan: dict) -> dict:
     WORKFLOW: This is the FINAL tool for SEARCH operations.
               Previous steps: detect_intent -> generate_action_plan -> search_records
     """
-    print("-------------------------------- Inside search_records_impl --------------------------------", flush=True)
+    #print("-------------------------------- Inside search_records_impl --------------------------------", flush=True)
     parameters = action_plan.get("parameters", {})
 
     if not parameters:
@@ -67,8 +67,8 @@ async def search_records_impl(action_plan: dict) -> dict:
 
     url = f"{BASE_URL}{query}"
 
-    print("\n[MCP] Executing GET request:")
-    print(url)
+    #print("\n[MCP] Executing GET request:")
+    #print(url)
 
     try:
         response = requests.get(url)

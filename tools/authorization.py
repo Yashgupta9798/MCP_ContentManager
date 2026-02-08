@@ -147,14 +147,14 @@ async def check_authorization_impl(email: str, intent: str) -> dict:
             }
             
     except requests.exceptions.HTTPError as e:
-        print(f"[AUTHORIZATION] ERROR: HTTP error: {str(e)}")
+        #print(f"[AUTHORIZATION] ERROR: HTTP error: {str(e)}")
         return {
             "authorized": False,
             "error": f"Content Manager API error: {str(e)}",
             "instruction": "STOP - Cannot verify authorization. Do not call any other tools."
         }
     except Exception as e:
-        print(f"[AUTHORIZATION] ERROR: {str(e)}")
+        #print(f"[AUTHORIZATION] ERROR: {str(e)}")
         return {
             "authorized": False,
             "error": f"Authorization check failed: {str(e)}",

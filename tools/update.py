@@ -77,7 +77,7 @@ async def update_record_impl(action_plan: dict) -> dict:
               Previous steps: detect_intent -> generate_action_plan -> update_record
     """
 
-    print("-------------------------------- Inside update_record_impl --------------------------------", flush=True)
+    #print("-------------------------------- Inside update_record_impl --------------------------------", flush=True)
 
     # ------------------------------------------------
     # STEP 1: GET (SEARCH)
@@ -93,7 +93,7 @@ async def update_record_impl(action_plan: dict) -> dict:
     search_query = urlencode(search_params)
     search_url = f"{SEARCH_BASE_URL}{search_query}"
 
-    print("\n[MCP] Executing SEARCH (GET):")
+    #print("\n[MCP] Executing SEARCH (GET):")
     print(search_url)
 
     try:
@@ -119,7 +119,7 @@ async def update_record_impl(action_plan: dict) -> dict:
 
     uri = results[0].get("Uri")
     print("----------------------------------------------------------------------------", flush=True)
-    print(uri, flush=True)
+    #print(uri, flush=True)
 
     if not uri:
         return {
@@ -127,7 +127,7 @@ async def update_record_impl(action_plan: dict) -> dict:
             "details": "Uri not found in search response"
         }
 
-    print(f"\n[MCP] Found record Uri: {uri}")
+    #print(f"\n[MCP] Found record Uri: {uri}")
 
     # ------------------------------------------------
     # STEP 3: BUILD UPDATE BODY
@@ -149,8 +149,8 @@ async def update_record_impl(action_plan: dict) -> dict:
         if value not in ("", None, "<value_if_provided>"):
             update_body[key] = value
 
-    print("\n[MCP] Executing UPDATE (POST) with body:", flush=True)
-    print(update_body, flush=True)
+    #print("\n[MCP] Executing UPDATE (POST) with body:", flush=True)
+    #print(update_body, flush=True)
 
     # ------------------------------------------------
     # STEP 4: POST (UPDATE)

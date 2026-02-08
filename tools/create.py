@@ -59,22 +59,22 @@ async def create_record_impl(action_plan: dict) -> dict:
               
     IMPORTANT: RecordTitle and RecordRecordType are MANDATORY for creating a record.
     """
-    print("------------Entering Record Title, Record Type is mandatory to create a record--------------", flush = True)
+    #print("------------Entering Record Title, Record Type is mandatory to create a record--------------", flush = True)
     parameters = action_plan.get("parameters", {})
 
     if not parameters:
         return {"error": "parameters required for CREATE", "details": "action_plan.parameters is empty"}
 
-    print("\n[MCP] Executing POST request (CREATE):")
-    print(BASE_URL)
-    print(parameters)
+    #print("\n[MCP] Executing POST request (CREATE):")
+    #print(BASE_URL)
+    #print(parameters)
     
     try:
         title = parameters.RecordTitle
         type = parameters.RecordRecordType
     except:
-        print("*Please Enter the type and title of record")
-
+       # print("*Please Enter the type and title of record")
+        return {"error":"RecordTitle and RecordRecordType are required for create a record"}
     try:
         response = requests.post(BASE_URL, json=parameters)
         response.raise_for_status()

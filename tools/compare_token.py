@@ -71,12 +71,12 @@ async def compare_token_impl() -> dict:
     NEXT STEP: If tokens_match=True, proceed to 'detect_intent' tool.
                If tokens_match=False, STOP - tell user to start a new chat.
     """
-    print("\n[TOKEN] Comparing authentication tokens...")
+    #print("\n[TOKEN] Comparing authentication tokens...")
     
     # Read server token
     server_token, server_error = _read_token(SERVER_TOKEN_PATH, "Server token")
     if server_error:
-        print(f"[TOKEN] ERROR: {server_error}")
+        #print(f"[TOKEN] ERROR: {server_error}")
         return {
             "tokens_match": False,
             "verified": False,
@@ -99,7 +99,7 @@ async def compare_token_impl() -> dict:
     
     # Compare tokens
     if server_token == client_token:
-        print("[TOKEN] SUCCESS: Tokens match - user verified")
+       # print("[TOKEN] SUCCESS: Tokens match - user verified")
         return {
             "tokens_match": True,
             "verified": True,
@@ -108,7 +108,7 @@ async def compare_token_impl() -> dict:
             "next_step": "Call 'detect_intent' tool with the user's query."
         }
     else:
-        print("[TOKEN] SECURITY WARNING: Tokens do not match!")
+       # print("[TOKEN] SECURITY WARNING: Tokens do not match!")
         return {
             "tokens_match": False,
             "verified": False,

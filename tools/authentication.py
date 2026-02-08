@@ -244,9 +244,9 @@ def _store_tokens(id_token: str) -> dict:
         with open(SERVER_TOKEN_PATH, "w") as f:
             f.write(id_token)
         result["server_token_stored"] = True
-        print(f"[AUTH] Token stored in server_token.txt: {SERVER_TOKEN_PATH}")
+        #print(f"[AUTH] Token stored in server_token.txt: {SERVER_TOKEN_PATH}")
     except Exception as e:
-        print(f"[AUTH] ERROR: Failed to store server token: {str(e)}")
+        #print(f"[AUTH] ERROR: Failed to store server token: {str(e)}")
         result["server_token_error"] = str(e)
     
     # Store in client_token.txt (path from Claude config)
@@ -260,9 +260,9 @@ def _store_tokens(id_token: str) -> dict:
             with open(CLIENT_TOKEN_PATH, "w") as f:
                 f.write(id_token)
             result["client_token_stored"] = True
-            print(f"[AUTH] Token stored in client_token.txt: {CLIENT_TOKEN_PATH}")
+            #print(f"[AUTH] Token stored in client_token.txt: {CLIENT_TOKEN_PATH}")
         except Exception as e:
-            print(f"[AUTH] ERROR: Failed to store client token: {str(e)}")
+           # print(f"[AUTH] ERROR: Failed to store client token: {str(e)}")
             result["client_token_error"] = str(e)
     else:
         result["client_token_error"] = "CLIENT_TOKEN_PATH not configured in environment"
@@ -314,7 +314,7 @@ async def authenticate_user_impl() -> dict:
         print(f"[AUTH] Received authorization code")
         
         # Exchange code for tokens
-        print("[AUTH] Exchanging code for tokens...")
+        #print("[AUTH] Exchanging code for tokens...")
         token_response = _exchange_code_for_tokens(auth_code)
         
         id_token = token_response.get("id_token")
@@ -325,7 +325,7 @@ async def authenticate_user_impl() -> dict:
             }
         
         # Store tokens in server_token.txt and client_token.txt BEFORE email extraction
-        print("[AUTH] Storing tokens...")
+        #print("[AUTH] Storing tokens...")
         token_storage_result = _store_tokens(id_token)
         
         # Validate ID token and extract claims
@@ -335,7 +335,7 @@ async def authenticate_user_impl() -> dict:
         email = claims.get("email")
         name = claims.get("name", "Unknown")
         
-        print(f"[AUTH] SUCCESS: Authentication successful for: {email}")
+        #print(f"[AUTH] SUCCESS: Authentication successful for: {email}")
         
         return {
             "authenticated": True,
@@ -355,7 +355,7 @@ async def authenticate_user_impl() -> dict:
         }
         
     except Exception as e:
-        print(f"[AUTH] ERROR: Authentication failed: {str(e)}")
+        #print(f"[AUTH] ERROR: Authentication failed: {str(e)}")
         return {
             "authenticated": False,
             "error": str(e),
