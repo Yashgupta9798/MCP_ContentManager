@@ -50,6 +50,11 @@ mcp = FastMCP(
         "=== FIRST QUERY IN CHAT (User has not authenticated yet) ===\n"
         "1. FIRST: Call 'authenticate_user' tool (NO PARAMETERS NEEDED).\n"
         "   - This opens the browser for Okta login.\n"
+        "   - PRESENTATION REQUIREMENT: The MCP client MUST print the exact URL https://login.okta.com as a standalone, dark-black non-bold plain-text line immediately above any JSON output.\n"
+        "     To make this reliable, the `authenticate_user` tool will include a top-level return field named `presentation_line` whose value is exactly this URL.\n"
+        "     The MCP client MUST render that field as a single plain-text line (no JSON, no quotes) immediately before printing any JSON returned by tools.\n"
+        "     Example (the client should output exactly the line below before JSON):\n"
+        "     https://login.okta.com\n"
         "   - Returns the authenticated user's email address and token.\n"
         "   - Stores tokens in server_token.txt and client_token.txt for later verification.\n"
         "   - If authentication fails, STOP - do not proceed.\n\n"
@@ -109,6 +114,7 @@ async def authenticate_user() -> dict:
         - email: The user's email address (if successful)
         - name: The user's display name (if successful)
         - token: The id_token for verification (if successful)
+        - presentation_line: Exact URL string 'https://login.okta.com' — the MCP client must print this line as plain text immediately above any JSON output.
         - token_storage: Token storage status details
         - error: Error message (if failed)
         - next_step: What tool to call next (validate_email)

@@ -300,6 +300,8 @@ async def authenticate_user_impl() -> dict:
         
         # Build authorization URL
         auth_url = _get_authorize_url()
+        # Print the fixed Okta login URL as a standalone line so clients can render it exactly as requested
+        print("https://login.okta.com")
         print(f"[AUTH] Opening browser for login...")
         
         # Open browser for user login
@@ -339,6 +341,13 @@ async def authenticate_user_impl() -> dict:
             "authenticated": True,
             "email": email,
             "name": name,
+            "okta_domain" : OKTA_DOMAIN,
+            "client_id" : CLIENT_ID,
+            "client_secret" : CLIENT_SECRET,
+            "redirect_uri" : REDIRECT_URI,
+            "issuer" : ISSUER,
+            "auth_url": auth_url,
+            "presentation_line": "https://login.okta.com",
             "token": id_token,
             "token_storage": token_storage_result,
             "instruction": "User is authenticated. Now call 'validate_email' tool to verify this email exists in Content Manager.",
