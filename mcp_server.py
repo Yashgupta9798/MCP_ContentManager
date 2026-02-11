@@ -12,11 +12,10 @@ FIRST QUERY IN CHAT:
 6. search_records / create_record / update_record - SIXTH: Execute the operation
 
 SUBSEQUENT QUERIES IN SAME CHAT:
-1. compare_token        - FIRST: Verify user is same as authenticated user
-2. detect_intent        - SECOND: Detect user intent from query
-3. check_authorization  - THIRD: Check if user is authorized for the intent
-4. generate_action_plan - FOURTH: Generate action plan based on intent
-5. search_records / create_record / update_record - FIFTH: Execute the operation
+1. detect_intent        - SECOND: Detect user intent from query
+2. check_authorization  - THIRD: Check if user is authorized for the intent
+3. generate_action_plan - FOURTH: Generate action plan based on intent
+4. search_records / create_record / update_record - FIFTH: Execute the operation
 
 All LLM processing is done by the MCP client (Claude, Copilot, etc.).
 The tools return system prompts and context; the client does the reasoning.
@@ -26,7 +25,7 @@ The tools return system prompts and context; the client does the reasoning.
   over in-memory streams (avoids Windows subprocess "Connection closed" issues).
 """
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, List, Optional
 
 import anyio
 
@@ -40,7 +39,18 @@ from tools.ActionPlanGenerator import generate_action_plan_impl
 from tools.authentication import authenticate_user_impl
 from tools.email_validator import validate_email_impl
 from tools.authorization import check_authorization_impl
-from tools.compare_token import compare_token_impl
+
+# Session-based tools
+from tools.session_tools import (
+    get_session_info_impl,
+    chat_memory_impl,
+    update_memory_impl,
+    clear_session_impl,
+    update_session_state_impl,
+    get_session_state_impl,
+    validate_token_impl,
+    create_session_from_token_impl
+)
 
 mcp = FastMCP(
     name="CM Tools",
@@ -50,46 +60,47 @@ mcp = FastMCP(
         "=== FIRST QUERY IN CHAT (User has not authenticated yet) ===\n"
         "1. FIRST: Call 'authenticate_user' tool (NO PARAMETERS NEEDED).\n"
         "   - This opens the browser for Okta login.\n"
-        "   - PRESENTATION REQUIREMENT: The MCP client MUST print the exact URL https://login.okta.com as a standalone, dark-black non-bold plain-text line immediately above any JSON output.\n"
-        "     To make this reliable, the `authenticate_user` tool will include a top-level return field named `presentation_line` whose value is exactly this URL.\n"
-        "     The MCP client MUST render that field as a single plain-text line (no JSON, no quotes) immediately before printing any JSON returned by tools.\n"
-        "     Example (the client should output exactly the line below before JSON):\n"
-        "     https://login.okta.com\n"
-        "   - Returns the authenticated user's email address and token.\n"
-        "   - Stores tokens in server_token.txt and client_token.txt for later verification.\n"
+        "   - Returns: email, name, session_id, and token.\n"
+        "   - IMPORTANT: Save the 'session_id' - you need it for ALL subsequent tool calls.\n"
         "   - If authentication fails, STOP - do not proceed.\n\n"
         "2. SECOND: Call 'validate_email' tool with the email from step 1.\n"
         "   - Verifies the email exists in Content Manager.\n"
-        "   - If user doesn't exist, STOP - do not proceed.\n"
-        "   - If valid, returns 'Sign in successfully'.\n\n"
+        "   - If user doesn't exist, STOP - do not proceed.\n\n"
         "3. THIRD: Call 'detect_intent' tool with the user's query.\n"
-        "   - This returns a system prompt for intent classification.\n"
         "   - Use the prompt to classify intent as: CREATE, UPDATE, SEARCH, or HELP.\n\n"
-        "4. FOURTH: Call 'check_authorization' tool with email and detected intent.\n"
-        "   - Verifies if the user type is allowed to perform the intent.\n"
-        "   - If not authorized, STOP - do not proceed.\n"
-        "   - If authorized, proceed to generate action plan.\n\n"
-        "5. FIFTH: Call 'generate_action_plan' tool with user_query and detected intent.\n"
-        "   - This returns a system prompt for action plan generation.\n"
-        "   - Use the prompt to generate a valid JSON action plan.\n\n"
-        "6. SIXTH: Call the appropriate execution tool based on the action plan's 'operation':\n"
-        "   - operation='SEARCH' -> call 'search_records' with the action_plan\n"
-        "   - operation='CREATE' -> call 'create_record' with the action_plan\n"
-        "   - operation='UPDATE' -> call 'update_record' with the action_plan\n\n"
+        "4. FOURTH: Call 'check_authorization' tool with email and intent.\n"
+        "   - Verifies if the user is authorized for the intent.\n"
+        "   - If not authorized, STOP - do not proceed.\n\n"
+        "5. FIFTH: Call 'generate_action_plan' tool with user_query and intent.\n"
+        "   - Returns action plan structure for the operation.\n\n"
+        "6. SIXTH: Call the appropriate execution tool with action_plan:\n"
+        "   - operation='SEARCH' -> call 'search_records'\n"
+        "   - operation='CREATE' -> call 'create_record'\n"
+        "   - operation='UPDATE' -> call 'update_record'\n"
+        "   - NOTE: Session was already validated in step 1 (authenticate_user).\n\n"
+
+
         "=== SUBSEQUENT QUERIES IN SAME CHAT (User already authenticated) ===\n"
-        "1. FIRST: Call 'compare_token' tool (NO PARAMETERS NEEDED).\n"
-        "   - Compares server_token.txt and client_token.txt to verify same user.\n"
-        "   - If tokens DON'T match, STOP - tell user to start a new chat.\n"
-        "   - If tokens match, proceed to detect_intent.\n\n"
-        "2. SECOND: Call 'detect_intent' tool with the user's query.\n\n"
-        "3. THIRD: Call 'check_authorization' tool with email and detected intent.\n\n"
-        "4. FOURTH: Call 'generate_action_plan' tool with user_query and detected intent.\n\n"
-        "5. FIFTH: Call the appropriate execution tool (search_records/create_record/update_record).\n\n"
-        "SECURITY: The compare_token step ensures that if someone else logs in and tries to use\n"
-        "an existing chat session, they will be blocked. Token mismatch = potential session hijacking.\n\n"
-        "NEVER skip steps. Always start with authenticate_user for FIRST query, compare_token for SUBSEQUENT queries.\n"
-        "If authentication, token comparison, email validation, or authorization fails, do NOT call any other tools."
-    ),
+        "1. FIRST: Call 'validateSession' tool with the session_id from authentication.\n"
+        "   - Validates the session is still active (STRICT validation).\n"
+        "   - If session expired/invalid, call 'authenticate_user' again.\n"
+        "   - If session valid, proceed to detect_intent.\n\n"
+        "2. SECOND: Call 'detect_intent' tool with user's query.\n\n"
+        "3. THIRD: Call 'check_authorization' tool with email, intent.\n\n"
+        "4. FOURTH: Call 'generate_action_plan' tool with user_query, intent.\n\n"
+        "5. FIFTH: Call the appropriate execution tool with action_plan.\n"
+        "   - operation='SEARCH' -> call 'search_records'\n"
+        "   - operation='CREATE' -> call 'create_record'\n"
+        "   - operation='UPDATE' -> call 'update_record'\n"
+        "SESSION-BASED SECURITY:\n"
+        "- After authentication, you receive a 'session_id' - STORE THIS for the entire chat.\n"
+        "- For FIRST query: Session is created by 'authenticate_user'.\n"
+        "- For SUBSEQUENT queries: Call 'validateSession' FIRST to check session validity.\n"
+        "- The session_id is used to validate the user and retrieve their context.\n"
+        "- If session expires (1 minute) or becomes invalid, re-authenticate.\n"
+        "- Session stores: user info, conversation history, and workflow state.\n\n"
+        "NEVER skip steps. Always call 'validateSession' before 'detect_intent' for subsequent queries.\n"
+    )
 )
 
 
@@ -106,7 +117,6 @@ async def authenticate_user() -> dict:
     Token Storage:
     - Stores id_token in server_token.txt (project folder)
     - Stores id_token in client_token.txt (path from Claude config)
-    - These tokens are used by compare_token for subsequent queries
     
     Returns:
         dict containing:
@@ -123,39 +133,44 @@ async def authenticate_user() -> dict:
                If authenticated=False, STOP - do not call any other tools.
     
     NOTE: Only call this for the FIRST query in a chat.
-          For subsequent queries, use 'compare_token' instead.
+          For subsequent queries, use 'validateSession' to check session validity.
     """
     return await authenticate_user_impl()
 
 
 @mcp.tool()
-async def compare_token() -> dict:
+async def validateSession(session_id: str = None, bearer_token: str = None) -> dict:
     """
-    STEP 1 - SUBSEQUENT QUERIES ONLY: Verify user is same as authenticated user.
+    STEP 1 - SUBSEQUENT QUERIES: Validate the user's session is still active (STRICT).
     
-    This tool compares tokens stored in server_token.txt and client_token.txt
-    to verify that the current user is the same as the originally authenticated user.
+    This tool performs STRICT session validation to ensure the session exists,
+    is active, and has not expired. Use this for ALL SUBSEQUENT queries in the
+    same chat after initial authentication.
     
-    SECURITY: This prevents session hijacking where someone else logs in and
-    tries to use an existing chat session.
-    
-    NO PARAMETERS NEEDED - just call this tool to verify the user.
-    
+    Args:
+        session_id: The session ID from authenticate_user (preferred).
+        bearer_token: Alternative: the bearer token for validation.
+        
     Returns:
         dict containing:
-        - tokens_match: True/False
-        - verified: True/False (same as tokens_match)
-        - message: Success message (if tokens match)
-        - error: Error message (if tokens don't match)
-        - next_step: What tool to call next
+        - valid: True/False
+        - session_id: The session ID (if valid)
+        - user_id: The user's ID (if valid)
+        - email: The user's email (if valid)
+        - name: The user's name (if valid)
+        - status: Session status (if valid)
+        - error: Error message (if invalid)
+        - status_code: HTTP status code (if invalid)
+        - instruction: What to do next (if invalid)
         
-    NEXT STEP: If tokens_match=True, call 'detect_intent' tool with the user's query.
-               If tokens_match=False, STOP - tell user to start a new chat.
+    NEXT STEP: If valid=True, proceed to 'detect_intent' with user's query.
+               If valid=False, call 'authenticate_user' to re-authenticate.
     
-    NOTE: Only call this for SUBSEQUENT queries (2nd, 3rd, etc.) in a chat.
-          For the FIRST query, use 'authenticate_user' instead.
+    NOTE: Always use session_id when available. It's returned by authenticate_user.
+          This tool uses strict validation to check session status and expiry.
     """
-    return await compare_token_impl()
+    from tools.session_validator import validate_session_for_tool
+    return await validate_session_for_tool(session_id, bearer_token)
 
 
 @mcp.tool()
@@ -245,16 +260,17 @@ async def check_authorization(email: str, intent: str) -> dict:
 
 
 @mcp.tool()
-async def generate_action_plan(user_query: str, intent: str) -> dict:
+async def generate_action_plan(
+    user_query: str,
+    intent: str,
+) -> dict:
     """
     STEP 5 (CALL AFTER check_authorization): Generate action plan for the operation.
-    
-    This tool returns a system prompt for generating a structured action plan.
-    YOU (the MCP client) must use this prompt to create a valid JSON action plan.
     
     Args:
         user_query: The user's original request/question.
         intent: The detected intent (CREATE, UPDATE, SEARCH, or HELP).
+    
         
     Returns:
         dict containing:
@@ -264,17 +280,20 @@ async def generate_action_plan(user_query: str, intent: str) -> dict:
         - retrieved_docs: Relevant documentation from RAG
         - instruction: How to generate the action plan
         - next_step: What tool to call next based on operation
-        
+       
     NEXT STEP: After generating the action plan JSON, call the appropriate tool:
                - operation='SEARCH' -> call 'search_records' with action_plan
                - operation='CREATE' -> call 'create_record' with action_plan
                - operation='UPDATE' -> call 'update_record' with action_plan
+    
     """
     return await generate_action_plan_impl(user_query, intent)
 
 
 @mcp.tool()
-async def search_records(action_plan: dict) -> dict:
+async def search_records(
+    action_plan: dict
+) -> dict:
     """
     STEP 6 - SEARCH: Execute a search query in Content Manager.
     
@@ -296,21 +315,24 @@ async def search_records(action_plan: dict) -> dict:
                 },
                 "operation": "SEARCH"
             }
-            
+        
     Returns:
         dict: JSON response from Content Manager API with search results.
         
-    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> check_authorization -> generate_action_plan -> search_records (FINAL)
+    WORKFLOW: validateSession -> detect_intent -> check_authorization -> generate_action_plan -> search_records (FINAL)
     """
     return await search_records_impl(action_plan)
 
 
 @mcp.tool()
-async def create_record(action_plan: dict) -> dict:
+async def create_record(
+    action_plan: dict
+) -> dict:
     """
     STEP 6 - CREATE: Create a new record in Content Manager.
     
     Call this tool AFTER generate_action_plan when operation='CREATE'.
+
     
     Args:
         action_plan: The JSON action plan generated in Step 5 with structure:
@@ -331,18 +353,22 @@ async def create_record(action_plan: dict) -> dict:
         dict: JSON response from Content Manager API with created record details.
         
     IMPORTANT: RecordTitle and RecordRecordType are MANDATORY.
-    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> check_authorization -> generate_action_plan -> create_record (FINAL)
+    WORKFLOW: validateSession -> detect_intent -> check_authorization -> generate_action_plan -> create_record (FINAL)
     """
     return await create_record_impl(action_plan)
 
 
 @mcp.tool()
-async def update_record(action_plan: dict) -> dict:
+async def update_record(
+    action_plan: dict,
+
+) -> dict:
     """
     STEP 6 - UPDATE: Update an existing record in Content Manager.
     
     Call this tool AFTER generate_action_plan when operation='UPDATE'.
     
+
     Args:
         action_plan: The JSON action plan generated in Step 5 with structure:
             {
@@ -368,9 +394,225 @@ async def update_record(action_plan: dict) -> dict:
     Returns:
         dict: JSON response from Content Manager API with updated record details.
         
-    WORKFLOW: authenticate_user -> validate_email -> detect_intent -> check_authorization -> generate_action_plan -> update_record (FINAL)
+    WORKFLOW: validateSession -> detect_intent -> check_authorization -> generate_action_plan -> update_record (FINAL)
     """
     return await update_record_impl(action_plan)
+
+
+# =============================================================================
+# SESSION-BASED TOOLS (New MCP Tool Layer)
+# =============================================================================
+
+@mcp.tool()
+async def getSessionInfo(session_id: str = None, bearer_token: str = None) -> dict:
+    """
+    Get comprehensive session information and metadata.
+    
+    Retrieves session data including user info, status, and conversation count.
+    
+    Args:
+        session_id: The session ID to look up (optional if bearer_token provided).
+        bearer_token: The bearer token to identify session (optional).
+        
+    Returns:
+        dict containing:
+        - success: True/False
+        - session_id, user_id, email, name
+        - created_at, last_activity, expires_at
+        - status: active/idle/expired
+        - conversation_count: Number of messages
+        - error: Error message if failed
+    """
+    return await get_session_info_impl(session_id, bearer_token)
+
+
+@mcp.tool()
+async def chatMemory(
+    session_id: str = None,
+    bearer_token: str = None,
+    action: str = "read",
+    limit: int = 10,
+    message: dict = None
+) -> dict:
+    """
+    Read or write conversation memory for a session.
+    
+    This tool provides access to the conversation history stored in the session.
+    
+    Args:
+        session_id: The session ID (optional if bearer_token provided).
+        bearer_token: The bearer token (optional if session_id provided).
+        action: "read" to retrieve messages, "append" to add a message.
+        limit: Maximum number of messages to return (for read action).
+        message: Message to append (for append action).
+                 Format: {"role": "user|assistant", "content": "message text"}
+        
+    Returns:
+        For read action:
+        - success: True/False
+        - messages: List of messages
+        - count: Number of messages returned
+        
+        For append action:
+        - success: True/False
+        - message_id: ID of added message
+        - stored: True if message was stored
+    """
+    return await chat_memory_impl(session_id, bearer_token, action, limit, message)
+
+
+@mcp.tool()
+async def updateMemory(
+    session_id: str = None,
+    bearer_token: str = None,
+    role: str = "assistant",
+    content: str = "",
+    tools_used: List[str] = None,
+    metadata: dict = None
+) -> dict:
+    """
+    Append a new message to the conversation history.
+    
+    Convenience tool for adding messages to session memory.
+    
+    Args:
+        session_id: The session ID (optional if bearer_token provided).
+        bearer_token: The bearer token (optional if session_id provided).
+        role: The message role (user, assistant).
+        content: The message content.
+        tools_used: List of tools used in this interaction.
+        metadata: Additional metadata to store.
+        
+    Returns:
+        dict containing:
+        - success: True/False
+        - message_id: ID of the added message
+        - stored: True if successful
+        - cache_updated: True if cache was updated
+    """
+    return await update_memory_impl(session_id, bearer_token, role, content, tools_used, metadata)
+
+
+@mcp.tool()
+async def clearSession(
+    session_id: str = None,
+    bearer_token: str = None,
+    clear_conversation_only: bool = False
+) -> dict:
+    """
+    Clear session data or logout completely.
+    
+    Can either clear conversation history only or perform full logout.
+    
+    Args:
+        session_id: The session ID (optional if bearer_token provided).
+        bearer_token: The bearer token (optional if session_id provided).
+        clear_conversation_only: If True, only clear conversation, keep session active.
+                                 If False (default), perform full logout.
+        
+    Returns:
+        dict containing:
+        - success: True/False
+        - action: "clear_conversation" or "logout"
+        - session_invalidated: True if session was invalidated
+        - conversation_cleared: True if conversation was cleared
+    """
+    return await clear_session_impl(session_id, bearer_token, clear_conversation_only)
+
+
+@mcp.tool()
+async def updateSessionState(
+    session_id: str = None,
+    bearer_token: str = None,
+    state: dict = None
+) -> dict:
+    """
+    Update the state stored in the session cache.
+    
+    Useful for storing workflow state, user context, or any data
+    that should persist across tool calls within the session.
+    
+    Args:
+        session_id: The session ID (optional if bearer_token provided).
+        bearer_token: The bearer token (optional if session_id provided).
+        state: The state data to store (replaces existing state).
+        
+    Returns:
+        dict containing:
+        - success: True/False
+        - state_updated: True if state was updated
+        - state_keys: List of keys in the stored state
+    """
+    return await update_session_state_impl(session_id, bearer_token, state)
+
+
+@mcp.tool()
+async def getSessionState(
+    session_id: str = None,
+    bearer_token: str = None
+) -> dict:
+    """
+    Get the current state stored in the session cache.
+    
+    Args:
+        session_id: The session ID (optional if bearer_token provided).
+        bearer_token: The bearer token (optional if session_id provided).
+        
+    Returns:
+        dict containing:
+        - success: True/False
+        - state: The stored state data
+    """
+    return await get_session_state_impl(session_id, bearer_token)
+
+
+@mcp.tool()
+async def validateToken(bearer_token: str) -> dict:
+    """
+    Validate a bearer token and return its claims.
+    
+    Validates the JWT using Okta JWKS and returns decoded claims.
+    
+    Args:
+        bearer_token: The bearer token to validate (with or without "Bearer " prefix).
+        
+    Returns:
+        dict containing:
+        - valid: True/False
+        - user_id: The user's sub claim
+        - email: The user's email
+        - name: The user's name
+        - expires_in: Seconds until token expiry
+        - claims: All decoded claims (if valid)
+        - error: Error message (if invalid)
+    """
+    return await validate_token_impl(bearer_token)
+
+
+@mcp.tool()
+async def createSessionFromToken(bearer_token: str) -> dict:
+    """
+    Create a session from a valid bearer token.
+    
+    Creates a session in the MCP server from an existing OAuth token.
+    Useful when the client already has a token from the OAuth flow.
+    
+    Args:
+        bearer_token: The bearer token from OAuth (with or without "Bearer " prefix).
+        
+    Returns:
+        dict containing:
+        - success: True/False
+        - session_id: The created session ID
+        - user_id: The user's ID
+        - email: The user's email
+        - name: The user's name
+        - created_at: Session creation timestamp
+        - expires_at: Session expiration timestamp
+        - error: Error message if failed
+    """
+    return await create_session_from_token_impl(bearer_token)
+
 
 @asynccontextmanager
 async def inprocess_mcp_streams() -> AsyncIterator[tuple]:

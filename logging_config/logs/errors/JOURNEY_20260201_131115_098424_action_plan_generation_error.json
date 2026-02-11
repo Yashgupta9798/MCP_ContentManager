@@ -1,7 +1,0 @@
-{
-  "timestamp": "2026-02-01T13:11:16.100653",
-  "error_type": "ValidationError",
-  "error_message": "Invalid action plan structure",
-  "stage": "action_plan_generation",
-  "stack_trace": null
-}

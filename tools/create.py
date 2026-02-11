@@ -23,7 +23,7 @@ INPUT: An action_plan dict with the following structure:
 OUTPUT: JSON response from Content Manager API with created record details.
 
 WORKFLOW POSITION: This is typically the FINAL tool in a CREATE workflow.
-                   detect_intent -> generate_action_plan -> create_record
+                   validateSession -> detect_intent -> generate_action_plan -> create_record
 
 NOTE: RecordTitle and RecordRecordType are MANDATORY fields for record creation.
 """
@@ -34,7 +34,11 @@ import requests
 BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
 # BASE_URL = "https://cmbeta.in/CMServiceAPI/Record?q="
 
-async def create_record_impl(action_plan: dict) -> dict:
+
+async def create_record_impl(
+    action_plan: dict,
+
+) -> dict:
     """
     Create a record in Content Manager.
     
@@ -55,35 +59,52 @@ async def create_record_impl(action_plan: dict) -> dict:
         dict: JSON response from Content Manager API with created record details.
     
     WORKFLOW: This is the FINAL tool for CREATE operations.
-              Previous steps: detect_intent -> generate_action_plan -> create_record
+              Previous steps: validateSession -> detect_intent -> 
+                             check_authorization -> generate_action_plan -> create_record
               
     IMPORTANT: RecordTitle and RecordRecordType are MANDATORY for creating a record.
     """
-    #print("------------Entering Record Title, Record Type is mandatory to create a record--------------", flush = True)
+    
+    
+    # ========== EXECUTE CREATE ==========
     parameters = action_plan.get("parameters", {})
 
     if not parameters:
-        return {"error": "parameters required for CREATE", "details": "action_plan.parameters is empty"}
+        return {
+            "error": "parameters required for CREATE",
+            "details": "action_plan.parameters is empty",
+            "operation": "CREATE"
+        }
 
-    #print("\n[MCP] Executing POST request (CREATE):")
-    #print(BASE_URL)
-    #print(parameters)
-    
+    # Validate required fields
     try:
-        title = parameters.RecordTitle
-        type = parameters.RecordRecordType
+        title = parameters.get("RecordTitle")
+        record_type = parameters.get("RecordRecordType")
+        if not title or not record_type:
+            raise ValueError("Missing required fields")
     except:
-       # print("*Please Enter the type and title of record")
-        return {"error":"RecordTitle and RecordRecordType are required for create a record"}
+        return {
+            "error": "RecordTitle and RecordRecordType are required for create a record",
+            "operation": "CREATE"
+        }
+    
     try:
         response = requests.post(BASE_URL, json=parameters)
         response.raise_for_status()
         try:
-            return response.json()
+            result = response.json()
+            # Add operation info to response
+            result["operation"] = "CREATE"
+            return result
         except Exception:
-            return {"status_code": response.status_code, "text": response.text}
+            return {
+                "status_code": response.status_code,
+                "text": response.text,
+                "operation": "CREATE"
+            }
     except Exception as e:
         return {
             "error": "POST request failed (CREATE)",
-            "details": str(e)
+            "details": str(e),
+            "operation": "CREATE"
         }

@@ -25,7 +25,7 @@ INPUT: An action_plan dict with the following structure:
 OUTPUT: JSON response from Content Manager API with search results.
 
 WORKFLOW POSITION: This is typically the FINAL tool in a SEARCH workflow.
-                   detect_intent -> generate_action_plan -> search_records
+                   validateSession -> detect_intent -> generate_action_plan -> search_records
 """
 
 import requests
@@ -36,13 +36,16 @@ BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
 # BASE_URL = "https://cmbeta.in/CMServiceAPI/Record?q="
 
 
-async def search_records_impl(action_plan: dict) -> dict:
+async def search_records_impl(
+    action_plan: dict,
+
+) -> dict:
     """
     Search records in Content Manager.
     
     This tool executes a GET request to the Content Manager API to search for records.
     It should be called AFTER the 'generate_action_plan' tool has created a SEARCH action plan.
-    
+   
     Args:
         action_plan: A dict containing:
             - path: "Record/" (API endpoint path)
@@ -55,9 +58,12 @@ async def search_records_impl(action_plan: dict) -> dict:
               Results are in the "Results" array with record details.
     
     WORKFLOW: This is the FINAL tool for SEARCH operations.
-              Previous steps: detect_intent -> generate_action_plan -> search_records
+              Previous steps: validateSession -> detect_intent -> 
+                             check_authorization -> generate_action_plan -> search_records
+              
     """
-    #print("-------------------------------- Inside search_records_impl --------------------------------", flush=True)
+    
+    # ========== EXECUTE SEARCH ==========
     parameters = action_plan.get("parameters", {})
 
     if not parameters:
@@ -67,18 +73,21 @@ async def search_records_impl(action_plan: dict) -> dict:
 
     url = f"{BASE_URL}{query}"
 
-    #print("\n[MCP] Executing GET request:")
-    #print(url)
-
     try:
         response = requests.get(url)
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        
+        # Add operation info to response
+        result["operation"] = "SEARCH"
+        
+        return result
 
     except Exception as e:
         return {
             "error": "GET request failed",
-            "details": str(e)
+            "details": str(e),
+            "operation": "SEARCH"
         }
 
 

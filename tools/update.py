@@ -32,7 +32,7 @@ INPUT: An action_plan dict with the following structure:
 OUTPUT: JSON response from Content Manager API with updated record details.
 
 WORKFLOW POSITION: This is typically the FINAL tool in an UPDATE workflow.
-                   detect_intent -> generate_action_plan -> update_record
+                   validateSession -> detect_intent -> generate_action_plan -> update_record
 
 NOTE: The tool first searches for the record using parameters_to_search,
       then updates it with parameters_to_update.
@@ -50,13 +50,18 @@ SEARCH_BASE_URL = "http://10.194.93.112/CMServiceAPI/Record?q="
 UPDATE_BASE_URL = "http://10.194.93.112/CMServiceAPI/Record"
 # UPDATE_BASE_URL = "https://cmbeta.in/CMServiceAPI/Record"
 
-async def update_record_impl(action_plan: dict) -> dict:
+
+async def update_record_impl(
+    action_plan: dict,
+
+) -> dict:
     """
     Update a Content Manager record using an action plan.
     
     This tool first searches for a record, then updates it with new values.
     It should be called AFTER the 'generate_action_plan' tool has created an UPDATE action plan.
 
+  
     Flow:
     1. GET record using parameters_to_search
     2. Extract Uri from search response
@@ -69,16 +74,16 @@ async def update_record_impl(action_plan: dict) -> dict:
             - parameters_to_search: Search criteria to find the record to update
             - parameters_to_update: New values to apply to the record
             - operation: "UPDATE"
-            
+     
     Returns:
         dict: JSON response from Content Manager API with updated record details.
     
     WORKFLOW: This is the FINAL tool for UPDATE operations.
-              Previous steps: detect_intent -> generate_action_plan -> update_record
+              Previous steps: validateSession -> detect_intent -> 
+                             check_authorization -> generate_action_plan -> update_record
+     
     """
-
-    #print("-------------------------------- Inside update_record_impl --------------------------------", flush=True)
-
+    
     # ------------------------------------------------
     # STEP 1: GET (SEARCH)
     # ------------------------------------------------
@@ -87,13 +92,13 @@ async def update_record_impl(action_plan: dict) -> dict:
     if not search_params:
         return {
             "error": "UPDATE failed",
-            "details": "parameters_to_search missing in action plan"
+            "details": "parameters_to_search missing in action plan",
+            "operation": "UPDATE"
         }
 
     search_query = urlencode(search_params)
     search_url = f"{SEARCH_BASE_URL}{search_query}"
 
-    #print("\n[MCP] Executing SEARCH (GET):")
     print(search_url)
 
     try:
@@ -103,7 +108,8 @@ async def update_record_impl(action_plan: dict) -> dict:
     except Exception as e:
         return {
             "error": "GET search failed",
-            "details": str(e)
+            "details": str(e),
+            "operation": "UPDATE"
         }
 
     # ------------------------------------------------
@@ -114,20 +120,19 @@ async def update_record_impl(action_plan: dict) -> dict:
     if not results:
         return {
             "error": "UPDATE failed",
-            "details": "No records found for given search criteria"
+            "details": "No records found for given search criteria",
+            "operation": "UPDATE"
         }
 
     uri = results[0].get("Uri")
     print("----------------------------------------------------------------------------", flush=True)
-    #print(uri, flush=True)
 
     if not uri:
         return {
             "error": "UPDATE failed",
-            "details": "Uri not found in search response"
+            "details": "Uri not found in search response",
+            "operation": "UPDATE"
         }
-
-    #print(f"\n[MCP] Found record Uri: {uri}")
 
     # ------------------------------------------------
     # STEP 3: BUILD UPDATE BODY
@@ -137,7 +142,8 @@ async def update_record_impl(action_plan: dict) -> dict:
     if not update_params:
         return {
             "error": "UPDATE failed",
-            "details": "parameters_to_update missing in action plan"
+            "details": "parameters_to_update missing in action plan",
+            "operation": "UPDATE"
         }
 
     # Remove empty / placeholder values
@@ -149,19 +155,21 @@ async def update_record_impl(action_plan: dict) -> dict:
         if value not in ("", None, "<value_if_provided>"):
             update_body[key] = value
 
-    #print("\n[MCP] Executing UPDATE (POST) with body:", flush=True)
-    #print(update_body, flush=True)
-
     # ------------------------------------------------
     # STEP 4: POST (UPDATE)
     # ------------------------------------------------
     try:
         update_response = requests.post(UPDATE_BASE_URL, json=update_body)
         update_response.raise_for_status()
-        return update_response.json()
+        result = update_response.json()
+       
+        result["operation"] = "UPDATE"
+        
+        return result
 
     except Exception as e:
         return {
             "error": "POST update failed",
-            "details": str(e)
+            "details": str(e),
+            "operation": "UPDATE"
         }

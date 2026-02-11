@@ -23,13 +23,17 @@ from rag.retriever import ToolRetriever
 TOOL_SELECTION_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "tool_selection_prompt.md")
 
 
-async def generate_action_plan_impl(user_query: str, intent: str) -> dict:
+async def generate_action_plan_impl(
+    user_query: str,
+    intent: str,
+) -> dict:
     """
     Returns the system prompt and context for action plan generation.
     
     The MCP client (Claude/Copilot/etc.) should use this prompt to generate
     a structured action plan JSON based on the user's query and detected intent.
     
+       
     Args:
         user_query: The user's original request/question.
         intent: The detected intent (CREATE, UPDATE, SEARCH, or HELP).
@@ -43,6 +47,8 @@ async def generate_action_plan_impl(user_query: str, intent: str) -> dict:
                - "CREATE" operation -> call 'create_record' tool with the action_plan
                - "UPDATE" operation -> call 'update_record' tool with the action_plan
     """
+    
+    print(f"[ACTION_PLAN] Generating action plan for intent: {intent}")
     
     try:
         with open(TOOL_SELECTION_PROMPT_PATH, "r", encoding="utf-8") as f:
